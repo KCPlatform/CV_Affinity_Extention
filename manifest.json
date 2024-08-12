@@ -1,0 +1,18 @@
+{
+    "manifest_version": 3,
+    "name": "Beta Kapor.ai <> Affinity Report Linker",
+    "version": "1.0",
+    "description": "Appends a new link to company pages on Affinity",
+    "permissions": ["activeTab"],
+    "icons": {
+        "128": "icon128.png"
+    },
+    "content_scripts": [
+      {
+        "matches": [
+          "https://*.affinity.co/companies/*"
+        ],
+        "js": ["content.js"]
+      }
+    ]
+  }
