@@ -1,0 +1,119 @@
+.kci  img, .kci  button, .kci  p, .kci  a, .kci, .kci textarea, .kci h1, .kci h2, .kci h3, .kci h4, .kci h5, .kci h6 {
+    margin: 0; padding: 0;
+    font-size: 14px;
+    font-family: Söhne,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica Neue,Arial,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji !important;
+    font-weight: normal;
+}
+
+.kci .kci__view {
+    z-index: 999999;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 550px;
+    min-width: 550px;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0;
+}
+
+.kci [class*=btn--]:hover, .kci [class*=btn--]:focus, .kci__menu--float:hover{
+    animation: pulse 1s;
+    box-shadow: 0 0 0 1em transparent;
+}
+.kci [class*=btn--], .kci__menu--float {
+    transition: all .3s ease;
+}
+
+.kci__menu--float {
+    z-index: 9999999999 !important;
+    position: fixed;
+    top: 0;
+    right: 0;
+    margin: 100px 10px 0;
+    border-radius: 100%;
+    -moz-border-radius: 100%;
+    -webkit-border-radius: 100%;
+    background: white !important;
+    border: 1px solid #ccc;
+    padding: 4px;
+    width: 35px;
+    height: 35px;
+    padding: 0px;
+}
+
+.kci__menu--float img {
+    border-radius: 100%;
+    width: 32px;
+}
+
+.kci button {
+    display: block;
+    margin: 10px 0;
+    background-color: rgb(67, 95, 122);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 100%;
+    text-align: center;
+}
+
+.kci button:hover {
+    background-color: rgb(70, 129, 185);
+    color: white;
+}
+
+
+.kci .kci__header {
+    font-size: 16px !important;
+    color: #000 !important;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.kci::-webkit-scrollbar .kci__chat--results::-webkit-scrollbar {
+    width: 8px;
+    background: rgba(0, 0, 0, 0);
+}
+.kci::-webkit-scrollbar-thumb .kci__chat--results::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.kci__btn {
+    line-height: 1.1em;
+}
+
+.kci__btn--cancel {
+    background: rgb(133, 41, 41) !important
+}
+.kci__btn--cancel:hover {
+    background: rgb(144, 37, 37) !important
+}
+
+button.kci__btn--close {
+    width: 100px;
+}
+
+
+.kci__content {
+    width: 100%;
+    height: 100vh;
+}
+
+.kci__content--wrapper {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0px 10px;
+}
+
+.kci__content--wrapper button {
+    max-width: 40% !important;
+    align-self: flex-end;
+}

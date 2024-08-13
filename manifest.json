@@ -1,18 +1,38 @@
 {
-    "manifest_version": 3,
-    "name": "Beta Kapor.ai <> Affinity Report Linker",
-    "version": "1.0",
-    "description": "Appends a new link to company pages on Affinity",
-    "permissions": ["activeTab"],
-    "icons": {
-        "128": "icon128.png"
-    },
-    "content_scripts": [
-      {
-        "matches": [
-          "https://*.affinity.co/companies/*"
-        ],
-        "js": ["content.js"]
-      }
-    ]
-  }
+  "manifest_version": 3,
+  "name": "Beta Kapor.ai <> Affinity Report Linker",
+  "version": "1.0",
+  "description": "Appends a new link to company pages on Affinity",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "https://*.kapor.ai/*"
+  ],
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://*.kapor.ai"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.affinity.co/companies/*"
+      ],
+      "js": ["content.js"],
+      "css": ["style.css"]
+    }
+  ],
+  "host_permissions": [
+    "https://script.google.com/*",
+    "https://cdnjs.cloudflare.com/*",
+    "https://*.kapor.ai/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["proxy.html", "templates/panel.html", "icon-48.png", "proxy.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

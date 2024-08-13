@@ -1,0 +1,40 @@
+<div class="kci__menu--float" id="kci__menu--float"></div>
+
+<div class="kci__view" id="kci__view" style="display: none">
+    <div class="kci__menu" style="display: flex; justify-content: end;">
+        <button class="kci__btn--close btn btn-primary" id="kci__btn--close" style="font-size: 12px; margin-right: 20px">Close</button>
+    </div>
+    <div class="kci__content">
+        <iframe id="kci__iframe" style="width: 100%; height: 100vh; border: none; overflow: hidden;"></iframe>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded event fired');
+        const iframe = document.getElementById('kci__iframe');
+        const proxyUrl = chrome.runtime.getURL('proxy.html');
+        console.log('Proxy URL:', proxyUrl);
+        
+        // Check if the file exists
+        fetch(proxyUrl)
+            .then(response => {
+                if (response.ok) {
+                    console.log('proxy.html exists and is accessible');
+                    iframe.src = proxyUrl;
+                } else {
+                    console.error('proxy.html is not accessible:', response.status, response.statusText);
+                }
+            })
+            .catch(error => console.error('Error checking proxy.html:', error));
+
+        // Add an event listener to check if the iframe loads
+        iframe.addEventListener('load', function() {
+            console.log('Iframe loaded successfully');
+        });
+
+        iframe.addEventListener('error', function() {
+            console.error('Iframe failed to load');
+        });
+    });
+</script>
