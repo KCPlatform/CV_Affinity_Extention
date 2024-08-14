@@ -1,87 +1,95 @@
 // Function to process the company information and append a new link
 function processAndAppendCompanyLink() {
-    // Find the element with the specified class for the company name
-    const nameElement = document.querySelector('div.affinity-css-bagv5u.ectaxxz4 > div.affinity-css-1blk04o.ectaxxz2 > div.affinity-css-bagv5u.ectaxxz4');
-    
-    // Find the element with the specified class for the website
-    const websiteElement = document.querySelector('a.e12u4leb5.affinity-css-1s0bvmj.e1mhvozk0');
+    let nameElement, websiteElement, companyName, website;
+
+    if (window.location.href.includes('affinity.co/lists')) {
+        // For lists page
+        const companyDiv = document.querySelector('div.affinity-css-bagv5u.ectaxxz4');
+        if (companyDiv) {
+            nameElement = companyDiv.querySelector('a.affinity-css-bagv5u.ectaxxz3 span');
+            websiteElement = companyDiv.querySelector('a[href^="http"]');
+        }
+    } else {
+        // For company page (existing logic)
+        nameElement = document.querySelector('div.affinity-css-bagv5u.ectaxxz4 > div.affinity-css-1blk04o.ectaxxz2 > div.affinity-css-bagv5u.ectaxxz4');
+        websiteElement = document.querySelector('a.e12u4leb5.affinity-css-1s0bvmj.e1mhvozk0');
+    }
     
     if (nameElement && websiteElement && !websiteElement.nextElementSibling?.classList.contains('kapor-ai-link')) {
-      const companyName = nameElement.textContent.trim();
-      const website = websiteElement.textContent.trim();
-      console.log('Company name found:', companyName);
-      console.log('Website found:', website);
+        companyName = nameElement.textContent.trim();
+        website = websiteElement.textContent.trim();
+        console.log('Company name found:', companyName);
+        console.log('Website found:', website);
       
-      const kaporAiUrl = `https://develop.kapor.ai/company-report/?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(companyName)}&source=affinity&hide_header=true`;
+        const kaporAiUrl = `${CONFIG.KAPOR_AI_BASE_URL}/company-report/?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(companyName)}&source=affinity&hide_header=true`;
       
-      // Store the URL to load
-      lastKaporAiUrl = kaporAiUrl;
+        // Store the URL to load
+        lastKaporAiUrl = kaporAiUrl;
       
-      // Update the iframe only if kci__view is visible
-      updateIframeIfVisible();
+        // Update the iframe only if kci__view is visible
+        updateIframeIfVisible();
       
-      // Create a new anchor element
-      const newLink = document.createElement('a');
-      newLink.href = kaporAiUrl;
-      newLink.textContent = 'View on Kapor AI';
-      newLink.className = 'kapor-ai-link';
-      newLink.target = '_blank';
-      newLink.rel = 'noopener noreferrer';
-      newLink.style.marginLeft = '10px';
-      newLink.style.color = '#007bff';
-      newLink.style.textDecoration = 'none';
+        // Create a new anchor element
+        const newLink = document.createElement('a');
+        newLink.href = kaporAiUrl;
+        newLink.textContent = 'View on Kapor AI';
+        newLink.className = 'kapor-ai-link';
+        newLink.target = '_blank';
+        newLink.rel = 'noopener noreferrer';
+        newLink.style.marginLeft = '10px';
+        newLink.style.color = '#007bff';
+        newLink.style.textDecoration = 'none';
 
-      // Append the new link after the website link
-      websiteElement.parentNode.insertBefore(newLink, websiteElement.nextSibling);
+        // Append the new link after the website link
+        websiteElement.parentNode.insertBefore(newLink, websiteElement.nextSibling);
     } else {
-      if (!nameElement) console.log('Company name element not found');
-      if (!websiteElement) console.log('Website element not found');
+        if (!nameElement) console.log('Company name element not found');
+        if (!websiteElement) console.log('Website element not found');
     }
-  }
-  
-  // Function to check if we're on a relevant page
-  function isRelevantPage() {
-    return window.location.href.match(/https:\/\/[^\/]+\.affinity\.co\/companies\/\d+/);
-  }
-  
-  // Function to run our main logic
-  function runMain() {
+}
+
+// Function to check if we're on a relevant page
+function isRelevantPage() {
+    return window.location.href.match(/https:\/\/[^\/]+\.affinity\.co/);
+}
+
+// Function to run our main logic
+function runMain() {
     if (isRelevantPage()) {
-      processAndAppendCompanyLink();
+        processAndAppendCompanyLink();
     }
-  }
-  
-  // Run immediately
-  runMain();
-  
-  // Set up a MutationObserver to watch for changes
-  const observer = new MutationObserver((mutations) => {
+}
+
+runMain();
+adjustKciViewPosition(); 
+
+// Set up a MutationObserver to watch for changes
+const observer = new MutationObserver((mutations) => {
     for (let mutation of mutations) {
-      if (mutation.type === 'childList' || mutation.type === 'subtree') {
-        runMain();
-        break;
-      }
+        if (mutation.type === 'childList' || mutation.type === 'subtree') {
+            runMain();
+            break;
+        }
     }
-  });
+});
+observer.observe(document.body, { childList: true, subtree: true });
   
-  // Start observing the document with the configured parameters
-  observer.observe(document.body, { childList: true, subtree: true });
-  
-  // Also run when the URL changes (for single-page apps)
-  let lastUrl = location.href;
-  new MutationObserver(() => {
+// Also run when the URL changes (for single-page apps)
+let lastUrl = location.href;
+new MutationObserver(() => {
     const url = location.href;
     if (url !== lastUrl) {
-      lastUrl = url;
-      runMain();
+        lastUrl = url;
+        runMain();
+        adjustKciViewPosition(); 
     }
-  }).observe(document, {subtree: true, childList: true});
+}).observe(document, {subtree: true, childList: true});
 
 
 function loadProxyIntoIframe() {
   const iframe = document.getElementById('kci__iframe');
   if (iframe) {
-      const proxyUrl = chrome.runtime.getURL('proxy.html');
+      const proxyUrl = chrome.runtime.getURL('templates/proxy.html');
       console.log('Loading proxy URL into iframe:', proxyUrl);
       
       iframe.src = proxyUrl;
@@ -90,10 +98,15 @@ function loadProxyIntoIframe() {
       
       iframe.onload = function() {
           console.log('Proxy iframe loaded successfully');
+          // Pass the CONFIG to the proxy
+          iframe.contentWindow.postMessage({
+              type: 'config',
+              config: { KAPOR_AI_BASE_URL: CONFIG.KAPOR_AI_BASE_URL }
+          }, '*');
           // Send initial URL to load
           iframe.contentWindow.postMessage({
               type: 'loadUrl',
-              url: 'https://develop.kapor.ai/search?hide_header=true'
+              url: `${CONFIG.KAPOR_AI_BASE_URL}/search?hide_header=true&source=affinity`
           }, '*');
       };
       
@@ -159,17 +172,14 @@ function kciHotKeys() {
 
 
 function kciRunAfterPanelLoad() {
-
   kciHotKeys();
-
   kciMainButtons();
-
+  adjustKciViewPosition();
 }
 
 
 function kciMainButtons() {
-
-  const iconURL = chrome.runtime.getURL("icon-48.png");
+  const iconURL = chrome.runtime.getURL("icon-128.png");
   const iconElement = document.createElement("img");
   iconElement.alt = "KCI Tools";
   iconElement.src = iconURL;
@@ -180,9 +190,12 @@ function kciMainButtons() {
   targetDiv.appendChild(iconElement);
 
   document.getElementById('kci__btn--open').addEventListener('click', function() {
-      document.getElementById('kci__view').style.display = 'block';
+      const kciView = document.getElementById('kci__view');
+      kciView.style.display = 'block';
       document.getElementById('kci__menu--float').style.display = 'none';
-      updateIframeIfVisible(); // Add this line to update iframe when opened
+      
+      adjustKciViewPosition();
+      updateIframeIfVisible();
   });
 
   document.getElementById('kci__btn--close').addEventListener('click', function() {
@@ -237,5 +250,18 @@ function updateIframeIfVisible() {
             type: 'loadUrl',
             url: lastKaporAiUrl
         }, '*');
+    }
+}
+
+function adjustKciViewPosition() {
+    const kciView = document.getElementById('kci__view');
+    if (kciView) {
+        if (window.location.href.includes('affinity.co/lists')) {
+            kciView.style.left = '0';
+            kciView.style.right = 'auto';
+        } else {
+            kciView.style.right = '0';
+            kciView.style.left = 'auto';
+        }
     }
 }

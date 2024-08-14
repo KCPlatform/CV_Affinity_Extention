@@ -14,7 +14,6 @@
         console.log('DOMContentLoaded event fired');
         const iframe = document.getElementById('kci__iframe');
         const proxyUrl = chrome.runtime.getURL('proxy.html');
-        console.log('Proxy URL:', proxyUrl);
         
         // Check if the file exists
         fetch(proxyUrl)
