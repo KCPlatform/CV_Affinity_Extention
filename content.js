@@ -42,6 +42,92 @@ function processAndAppendCompanyLink() {
 
         // Append the new link after the website link
         websiteElement.parentNode.insertBefore(newLink, websiteElement.nextSibling);
+
+        // Add Kapor AI tab
+        const tabsContainer = document.querySelector('.profile-content.displaying-tabs .affinity-css-vc9gfs');
+        if (tabsContainer && !document.querySelector('.kapor-ai-tab-button')) {
+            const kaporAiTabButton = document.createElement('button');
+            kaporAiTabButton.type = 'button';
+            kaporAiTabButton.role = 'tab';
+            kaporAiTabButton.className = 'kapor-ai-tab-button affinity-css-1osj8hg';
+
+            // Create the inner div
+            const innerDiv = document.createElement('div');
+            innerDiv.className = 'affinity-css-j2rosk e1ny9v0z0';
+            innerDiv.textContent = 'Kapor AI';
+
+            // Append the inner div to the button
+            kaporAiTabButton.appendChild(innerDiv);
+            
+            // Function to remove Kapor AI content and restore sibling visibility
+            function removeKaporAiContent() {
+                const kaporAiTab = document.querySelector('.kapor-ai-tab');
+                if (kaporAiTab) {
+                    kaporAiTab.remove();
+                    // Restore visibility of sibling content
+                    const siblingContent = document.querySelector('.profile-content-tabs > :not(.kapor-ai-tab)');
+                    if (siblingContent) {
+                        siblingContent.style.display = ''; // Reset to inherited display value
+                    }
+                }
+                // Remove active state from Kapor AI button
+                kaporAiTabButton.removeAttribute('data-state');
+            }
+
+            // Add click event listener to Kapor AI tab button
+            kaporAiTabButton.addEventListener('click', function() {
+                const profileContentTabs = document.querySelector('.profile-content-tabs');
+                if (profileContentTabs) {
+                    // Remove existing Kapor AI content
+                    removeKaporAiContent();
+                    
+                    // Hide sibling content
+                    const siblingContent = profileContentTabs.firstElementChild;
+                    if (siblingContent) {
+                        siblingContent.style.display = 'none';
+                    }
+                    
+                    // Create new div for Kapor AI content
+                    const kaporAiTabContent = document.createElement('div');
+                    kaporAiTabContent.className = 'kapor-ai-tab';
+                    
+                    // Create iframe
+                    const iframe = document.createElement('iframe');
+                    iframe.src = kaporAiUrl;
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%'; 
+                    iframe.style.border = 'none';
+                    
+                    // Append iframe to the new div
+                    kaporAiTabContent.appendChild(iframe);
+                    
+                    // Append the new div to profile-content-tabs
+                    profileContentTabs.appendChild(kaporAiTabContent);
+
+                    // Set active state on Kapor AI button
+                    kaporAiTabButton.setAttribute('data-state', 'active');
+
+                    // Remove active state from other buttons
+                    otherTabButtons.forEach(button => {
+                        button.removeAttribute('data-state');
+                    });
+                }
+            });
+            
+            // Add click event listeners to other tab buttons
+            const otherTabButtons = tabsContainer.querySelectorAll('button[role="tab"]:not(.kapor-ai-tab-button)');
+            otherTabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    removeKaporAiContent();
+                    // Set active state on clicked button
+                    this.setAttribute('data-state', 'active');
+                    // Remove active state from Kapor AI button
+                    kaporAiTabButton.removeAttribute('data-state');
+                });
+            });
+
+            tabsContainer.appendChild(kaporAiTabButton);
+        }
     } else {
         if (!nameElement) console.log('Company name element not found');
         if (!websiteElement) console.log('Website element not found');

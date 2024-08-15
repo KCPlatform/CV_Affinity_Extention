@@ -20,7 +20,9 @@
     padding: 0;
     transition: left 0.3s, right 0.3s;
 }
-
+.kapor-ai-tab {
+    height: 100% !important;
+}
 .kci [class*=btn--]:hover, .kci [class*=btn--]:focus, .kci__menu--float:hover{
     animation: pulse 1s;
     box-shadow: 0 0 0 1em transparent;
