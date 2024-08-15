@@ -28,20 +28,6 @@ function processAndAppendCompanyLink() {
       
         // Update the iframe only if kci__view is visible
         updateIframeIfVisible();
-      
-        // Create a new anchor element
-        const newLink = document.createElement('a');
-        newLink.href = kaporAiUrl;
-        newLink.textContent = 'View on Kapor AI';
-        newLink.className = 'kapor-ai-link';
-        newLink.target = '_blank';
-        newLink.rel = 'noopener noreferrer';
-        newLink.style.marginLeft = '10px';
-        newLink.style.color = '#007bff';
-        newLink.style.textDecoration = 'none';
-
-        // Append the new link after the website link
-        websiteElement.parentNode.insertBefore(newLink, websiteElement.nextSibling);
 
         // Add Kapor AI tab
         const tabsContainer = document.querySelector('.profile-content.displaying-tabs .affinity-css-vc9gfs');
