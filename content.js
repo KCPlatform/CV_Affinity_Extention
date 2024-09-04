@@ -30,12 +30,23 @@ function processAndAppendCompanyLink() {
         updateIframeIfVisible();
 
         // Add Kapor AI tab
-        const tabsContainer = document.querySelector('.profile-content.displaying-tabs .affinity-css-vc9gfs');
+        // const tabsContainer = document.querySelector('.profile-content.displaying-tabs .affinity-css-vc9gfs');
+        const tabsContainer = document.querySelector('.profile-content.displaying-tabs [role="tablist"]');
         if (tabsContainer && !document.querySelector('.kapor-ai-tab-button')) {
             const kaporAiTabButton = document.createElement('button');
+            const siblingButton = tabsContainer.querySelector('button[role="tab"]:not(.kapor-ai-tab-button)');
+
             kaporAiTabButton.type = 'button';
             kaporAiTabButton.role = 'tab';
-            kaporAiTabButton.className = 'kapor-ai-tab-button affinity-css-1osj8hg';
+
+            if (siblingButton) {
+                const siblingClasses = Array.from(siblingButton.classList)
+                    .filter(className => className.startsWith('affinity-css-') || className.startsWith('ergfh8s'));
+                kaporAiTabButton.className = `kapor-ai-tab-button ${siblingClasses.join(' ')}`;
+            } else {
+                kaporAiTabButton.className = 'kapor-ai-tab-button';
+            }
+
 
             // Create the inner div
             const innerDiv = document.createElement('div');
