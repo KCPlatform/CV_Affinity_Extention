@@ -14,7 +14,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.affinity.co/*"
+        "https://*.affinity.co/*",
+        "https://docs.google.com/spreadsheets/"
       ],
       "js": ["content.js", "config.js"],
       "css": ["style.css"]
