@@ -11,10 +11,21 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://*.kapor.ai"
   },
+  "permissions": [
+    "identity",
+    "https://www.googleapis.com/*"
+  ],
+  "oauth2": {
+    "client_id": "284271113800-1pvv63drja82blr9ngcckr4a53ro3s2g.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets.readonly"
+    ]
+  },
   "content_scripts": [
     {
       "matches": [
-        "https://*.affinity.co/*"
+        "https://*.affinity.co/*",
+        "https://docs.google.com/spreadsheets/*"
       ],
       "js": ["content.js", "config.js"],
       "css": ["style.css"]
@@ -24,7 +35,8 @@
     {
       "resources": ["templates/proxy.html", "templates/panel.html", "icon-128.png", "templates/proxy.js"],
       "matches": [
-        "https://*.affinity.co/*"
+        "https://*.affinity.co/*",
+        "https://docs.google.com/*"
       ]
     }
   ]
