@@ -15,7 +15,7 @@
     {
       "matches": [
         "https://*.affinity.co/*",
-        "https://docs.google.com/spreadsheets/"
+        "https://docs.google.com/spreadsheets/*"
       ],
       "js": ["content.js", "config.js"],
       "css": ["style.css"]
@@ -25,7 +25,8 @@
     {
       "resources": ["templates/proxy.html", "templates/panel.html", "icon-128.png", "templates/proxy.js"],
       "matches": [
-        "https://*.affinity.co/*"
+        "https://*.affinity.co/*",
+        "https://docs.google.com/*"
       ]
     }
   ]

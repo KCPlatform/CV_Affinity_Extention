@@ -1,6 +1,6 @@
 // Function to process the company information and append a new link
-function processAndAppendCompanyLink() {
-    let nameElement, websiteElement, companyName, website;
+function getAffinityCompanyInfo() {
+    let nameElement, websiteElement;
 
     if (window.location.href.includes('affinity.co/lists')) {
         // For lists page
@@ -10,140 +10,255 @@ function processAndAppendCompanyLink() {
             websiteElement = companyDiv.querySelector('a[href^="http"]');
         }
     } else {
-        // For company page (existing logic)
+        // For company page
         nameElement = document.querySelector('div.affinity-css-bagv5u.ectaxxz4 > div.affinity-css-1blk04o.ectaxxz2 > div.affinity-css-bagv5u.ectaxxz4');
         websiteElement = document.querySelector('a.e12u4leb5.affinity-css-1s0bvmj.e1mhvozk0');
     }
-    
-    if (nameElement && websiteElement && !websiteElement.nextElementSibling?.classList.contains('kapor-ai-link')) {
-        companyName = nameElement.textContent.trim();
-        website = websiteElement.textContent.trim();
-        console.log('Company name found:', companyName);
-        console.log('Website found:', website);
-      
-        const kaporAiUrl = `${CONFIG.KAPOR_AI_BASE_URL}/company-report/?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(companyName)}&source=affinity&hide_header=true`;
-      
-        // Store the URL to load
-        lastKaporAiUrl = kaporAiUrl;
-      
-        // Update the iframe only if kci__view is visible
-        updateIframeIfVisible();
 
-        // Add Kapor AI tab
-        // const tabsContainer = document.querySelector('.profile-content.displaying-tabs .affinity-css-vc9gfs');
-        const tabsContainer = document.querySelector('.profile-content.displaying-tabs [role="tablist"]');
-        if (tabsContainer && !document.querySelector('.kapor-ai-tab-button')) {
-            const kaporAiTabButton = document.createElement('button');
-            const siblingButton = tabsContainer.querySelector('button[role="tab"]:not(.kapor-ai-tab-button)');
+    if (nameElement && websiteElement) {
+        return {
+            companyName: nameElement.textContent.trim(),
+            website: websiteElement.textContent.trim()
+        };
+    }
+    return null;
+}
 
-            kaporAiTabButton.type = 'button';
-            kaporAiTabButton.role = 'tab';
+function createKaporAiUrl(companyName, website) {
+    return `${CONFIG.KAPOR_AI_BASE_URL}/company-report/?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(companyName)}&source=affinity&hide_header=true`;
+}
 
-            if (siblingButton) {
-                const siblingClasses = Array.from(siblingButton.classList)
-                    .filter(className => className.startsWith('affinity-css-') || className.startsWith('ergfh8s'));
-                kaporAiTabButton.className = `kapor-ai-tab-button ${siblingClasses.join(' ')}`;
-            } else {
-                kaporAiTabButton.className = 'kapor-ai-tab-button';
-            }
+function addKaporAiTab(kaporAiUrl) {
+    const tabsContainer = document.querySelector('.profile-content.displaying-tabs [role="tablist"]');
+    if (tabsContainer && !document.querySelector('.kapor-ai-tab-button')) {
+        const kaporAiTabButton = createKaporAiTabButton();
+        const otherTabButtons = tabsContainer.querySelectorAll('button[role="tab"]:not(.kapor-ai-tab-button)');
 
+        addKaporAiTabClickListener(kaporAiTabButton, kaporAiUrl, otherTabButtons);
+        addOtherTabsClickListeners(otherTabButtons, kaporAiTabButton);
 
-            // Create the inner div
-            const innerDiv = document.createElement('div');
-            innerDiv.className = 'affinity-css-j2rosk e1ny9v0z0';
-            innerDiv.textContent = 'Kapor AI';
-
-            // Append the inner div to the button
-            kaporAiTabButton.appendChild(innerDiv);
-            
-            // Function to remove Kapor AI content and restore sibling visibility
-            function removeKaporAiContent() {
-                const kaporAiTab = document.querySelector('.kapor-ai-tab');
-                if (kaporAiTab) {
-                    kaporAiTab.remove();
-                    // Restore visibility of sibling content
-                    const siblingContent = document.querySelector('.profile-content-tabs > :not(.kapor-ai-tab)');
-                    if (siblingContent) {
-                        siblingContent.style.display = ''; // Reset to inherited display value
-                    }
-                }
-                // Remove active state from Kapor AI button
-                kaporAiTabButton.removeAttribute('data-state');
-            }
-
-            // Add click event listener to Kapor AI tab button
-            kaporAiTabButton.addEventListener('click', function() {
-                const profileContentTabs = document.querySelector('.profile-content-tabs');
-                if (profileContentTabs) {
-                    // Remove existing Kapor AI content
-                    removeKaporAiContent();
-                    
-                    // Hide sibling content
-                    const siblingContent = profileContentTabs.firstElementChild;
-                    if (siblingContent) {
-                        siblingContent.style.display = 'none';
-                    }
-                    
-                    // Create new div for Kapor AI content
-                    const kaporAiTabContent = document.createElement('div');
-                    kaporAiTabContent.className = 'kapor-ai-tab';
-                    
-                    // Create iframe
-                    const iframe = document.createElement('iframe');
-                    iframe.src = kaporAiUrl;
-                    iframe.style.width = '100%';
-                    iframe.style.height = '100%'; 
-                    iframe.style.border = 'none';
-                    
-                    // Append iframe to the new div
-                    kaporAiTabContent.appendChild(iframe);
-                    
-                    // Append the new div to profile-content-tabs
-                    profileContentTabs.appendChild(kaporAiTabContent);
-
-                    // Set active state on Kapor AI button
-                    kaporAiTabButton.setAttribute('data-state', 'active');
-
-                    // Remove active state from other buttons
-                    otherTabButtons.forEach(button => {
-                        button.removeAttribute('data-state');
-                    });
-                }
-            });
-            
-            // Add click event listeners to other tab buttons
-            const otherTabButtons = tabsContainer.querySelectorAll('button[role="tab"]:not(.kapor-ai-tab-button)');
-            otherTabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    removeKaporAiContent();
-                    // Set active state on clicked button
-                    this.setAttribute('data-state', 'active');
-                    // Remove active state from Kapor AI button
-                    kaporAiTabButton.removeAttribute('data-state');
-                });
-            });
-
-            tabsContainer.appendChild(kaporAiTabButton);
-        }
-    } else {
-        if (!nameElement) console.log('Company name element not found');
-        if (!websiteElement) console.log('Website element not found');
+        tabsContainer.appendChild(kaporAiTabButton);
     }
 }
 
-// Function to check if we're on a relevant page
+function createKaporAiTabButton() {
+    const kaporAiTabButton = document.createElement('button');
+    kaporAiTabButton.type = 'button';
+    kaporAiTabButton.role = 'tab';
+
+    const siblingButton = document.querySelector('button[role="tab"]:not(.kapor-ai-tab-button)');
+    if (siblingButton) {
+        const siblingClasses = Array.from(siblingButton.classList)
+            .filter(className => className.startsWith('affinity-css-') || className.startsWith('ergfh8s'));
+        kaporAiTabButton.className = `kapor-ai-tab-button ${siblingClasses.join(' ')}`;
+    } else {
+        kaporAiTabButton.className = 'kapor-ai-tab-button';
+    }
+
+    const innerDiv = document.createElement('div');
+    innerDiv.className = 'affinity-css-j2rosk e1ny9v0z0';
+    innerDiv.textContent = 'Kapor AI';
+
+    kaporAiTabButton.appendChild(innerDiv);
+    return kaporAiTabButton;
+}
+
+function addKaporAiTabClickListener(kaporAiTabButton, kaporAiUrl, otherTabButtons) {
+    kaporAiTabButton.addEventListener('click', function() {
+        const profileContentTabs = document.querySelector('.profile-content-tabs');
+        if (profileContentTabs) {
+            removeKaporAiContent();
+            hideOtherContent(profileContentTabs);
+            addKaporAiContent(profileContentTabs, kaporAiUrl);
+            setActiveTab(kaporAiTabButton, otherTabButtons);
+        }
+    });
+}
+
+function addOtherTabsClickListeners(otherTabButtons, kaporAiTabButton) {
+    otherTabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            removeKaporAiContent();
+            this.setAttribute('data-state', 'active');
+            kaporAiTabButton.removeAttribute('data-state');
+        });
+    });
+}
+
+function removeKaporAiContent() {
+    const kaporAiTab = document.querySelector('.kapor-ai-tab');
+    if (kaporAiTab) {
+        kaporAiTab.remove();
+        const siblingContent = document.querySelector('.profile-content-tabs > :not(.kapor-ai-tab)');
+        if (siblingContent) {
+            siblingContent.style.display = '';
+        }
+    }
+}
+
+function hideOtherContent(profileContentTabs) {
+    const siblingContent = profileContentTabs.firstElementChild;
+    if (siblingContent) {
+        siblingContent.style.display = 'none';
+    }
+}
+
+function addKaporAiContent(profileContentTabs, kaporAiUrl) {
+    const kaporAiTabContent = document.createElement('div');
+    kaporAiTabContent.className = 'kapor-ai-tab';
+    
+    const iframe = document.createElement('iframe');
+    iframe.src = kaporAiUrl;
+    iframe.style.width = '100%';
+    iframe.style.height = '100%'; 
+    iframe.style.border = 'none';
+    
+    kaporAiTabContent.appendChild(iframe);
+    profileContentTabs.appendChild(kaporAiTabContent);
+}
+
+function setActiveTab(activeButton, inactiveButtons) {
+    activeButton.setAttribute('data-state', 'active');
+    inactiveButtons.forEach(button => button.removeAttribute('data-state'));
+}
+
+function processAndAppendCompanyLink(service) {
+    let companyInfo;
+
+    if (service === 'googlesheets') {
+        companyInfo = getGoogleSheetsCompanyInfo();
+    } else if (service === 'affinity') {
+        companyInfo = getAffinityCompanyInfo();
+    }
+    
+    if (companyInfo) {
+        const { companyName, website } = companyInfo;
+        console.log('Company name found:', companyName);
+        console.log('Website found:', website);
+      
+        const kaporAiUrl = createKaporAiUrl(companyName, website, service);
+        lastKaporAiUrl = kaporAiUrl;
+      
+        const iframe = ensureIframeExists();
+        if (iframe) {
+            if (service === 'googlesheets') {
+                iframe.src = kaporAiUrl;
+            } else {
+                // For Affinity, we'll load the proxy first
+                loadProxyIntoIframe(kaporAiUrl);
+            }
+        }
+
+        if (service === 'affinity') {
+            addKaporAiTab(kaporAiUrl);
+        }
+    } else {
+        console.log('Company information not found');
+    }
+}
+
+// Function to check if we're on a relevant servce
 function isRelevantPage() {
-    return window.location.href.match(/https:\/\/[^\/]+\.affinity\.co/) || 
-    window.location.href.match(/https:\/\/docs\.google\.com\/spreadsheets/);
+    if (window.location.href.match(/https:\/\/[^\/]+\.affinity\.co/)) {
+        return 'affinity';
+    } else if (window.location.href.match(/https:\/\/docs\.google\.com\/spreadsheets/)) {
+        return 'googlesheets';
+    }
+    return null;
 }
 
 // Function to run our main logic
 function runMain() {
-    if (isRelevantPage()) {
-        processAndAppendCompanyLink();
+    const service = isRelevantPage();
+    if (service) {
+        ensureKciElementsExist(); // Ensure elements exist before trying to use them
+        setupButtonListeners();
+        processAndAppendCompanyLink(service);
+        if (service === 'googlesheets') {
+            // For Google Sheets, we need to show the KCI view
+            const kciView = document.getElementById('kci__view');
+            if (kciView) {
+                kciView.style.display = 'block';
+            } else {
+                console.warn('kci__view element not found');
+            }
+            
+            const floatMenu = document.getElementById('kci__menu--float');
+            if (floatMenu) {
+                floatMenu.style.display = 'none';
+            } else {
+                console.warn('kci__menu--float element not found');
+            }
+            
+            adjustKciViewPosition();
+        }
     }
 }
 
+function ensureKciElementsExist() {
+    // Remove any existing duplicate elements
+    const existingKci = document.querySelectorAll('.kci');
+    existingKci.forEach((el, index) => {
+        if (index > 0) el.remove(); // Keep the first one, remove others
+    });
+
+    let kciContainer = document.querySelector('.kci');
+    if (!kciContainer) {
+        kciContainer = document.createElement('div');
+        kciContainer.className = 'kci';
+        kciContainer.id = 'kci';
+        document.body.appendChild(kciContainer);
+    }
+
+    let kciView = document.getElementById('kci__view');
+    if (!kciView) {
+        kciView = document.createElement('div');
+        kciView.id = 'kci__view';
+        kciView.className = 'kci__view';
+        kciContainer.appendChild(kciView);
+    }
+    // Set display to 'none' regardless of whether it was just created or already existed
+    kciView.style.display = 'none';
+
+    // Create or ensure existence of the button container
+    let buttonContainer = kciView.querySelector('.kci__button-container');
+    if (!buttonContainer) {
+        buttonContainer = document.createElement('div');
+        buttonContainer.className = 'kci__button-container';
+        kciView.appendChild(buttonContainer);
+    }
+
+    // Create or ensure existence of the full screen button
+    let fullScreenButton = buttonContainer.querySelector('#kci__btn--fullscreen');
+    if (!fullScreenButton) {
+        fullScreenButton = document.createElement('button');
+        fullScreenButton.id = 'kci__btn--fullscreen';
+        fullScreenButton.className = 'kci__btn kci__btn--fullscreen';
+        fullScreenButton.textContent = 'Full Screen';
+        buttonContainer.appendChild(fullScreenButton);
+    }
+
+    // Create or ensure existence of the close button
+    let closeButton = buttonContainer.querySelector('#kci__btn--close');
+    if (!closeButton) {
+        closeButton = document.createElement('button');
+        closeButton.id = 'kci__btn--close';
+        closeButton.className = 'kci__btn kci__btn--close';
+        closeButton.textContent = 'Close';
+        buttonContainer.appendChild(closeButton);
+    }
+
+    if (!document.getElementById('kci__menu--float')) {
+        const floatMenu = document.createElement('div');
+        floatMenu.id = 'kci__menu--float';
+        floatMenu.className = 'kci__menu--float';
+        kciContainer.appendChild(floatMenu);
+    }
+}
+
+// Call this function before runMain
+ensureKciElementsExist();
+setupButtonListeners();
 runMain();
 adjustKciViewPosition(); 
 
@@ -170,36 +285,26 @@ new MutationObserver(() => {
 }).observe(document, {subtree: true, childList: true});
 
 
-function loadProxyIntoIframe() {
-  const iframe = document.getElementById('kci__iframe');
-  if (iframe) {
-      const proxyUrl = chrome.runtime.getURL('templates/proxy.html');
-      console.log('Loading proxy URL into iframe:', proxyUrl);
-      
-      iframe.src = proxyUrl;
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      
-      iframe.onload = function() {
-          console.log('Proxy iframe loaded successfully');
-          // Pass the CONFIG to the proxy
-          iframe.contentWindow.postMessage({
-              type: 'config',
-              config: { KAPOR_AI_BASE_URL: CONFIG.KAPOR_AI_BASE_URL }
-          }, '*');
-          // Send initial URL to load
-          iframe.contentWindow.postMessage({
-              type: 'loadUrl',
-              url: `${CONFIG.KAPOR_AI_BASE_URL}/search?hide_header=true&source=affinity`
-          }, '*');
-      };
-      
-      iframe.onerror = function() {
-          console.error('Proxy iframe failed to load');
-      };
-  } else {
-      console.error('kci__iframe not found');
-  }
+function loadProxyIntoIframe(finalUrl) {
+    const iframe = document.getElementById('kci__iframe');
+    if (iframe) {
+        const proxyUrl = chrome.runtime.getURL('templates/proxy.html');
+        console.log('Loading proxy URL into iframe:', proxyUrl);
+        
+        iframe.src = proxyUrl;
+        
+        iframe.onload = function() {
+            console.log('Proxy iframe loaded successfully');
+            // Now that the proxy is loaded, we can send the final URL
+            iframe.contentWindow.postMessage({ type: 'loadUrl', url: finalUrl }, '*');
+        };
+        
+        iframe.onerror = function() {
+            console.error('Failed to load proxy iframe');
+        };
+    } else {
+        console.error('kci__iframe not found');
+    }
 }
 
   // Load the HTML
@@ -212,6 +317,7 @@ fetch(chrome.runtime.getURL('templates/panel.html'))
     container.id = "kci";
     container.innerHTML = data;
 
+    console.log('Appending container to body');
     document.body.appendChild(container);
 
     kciRunAfterPanelLoad();
@@ -274,9 +380,7 @@ function kciMainButtons() {
   targetDiv.appendChild(iconElement);
 
   document.getElementById('kci__btn--open').addEventListener('click', function() {
-      const kciView = document.getElementById('kci__view');
-      kciView.style.display = 'block';
-      document.getElementById('kci__menu--float').style.display = 'none';
+      document.getElementById('kci__view').style.display = 'block';
       
       adjustKciViewPosition();
       updateIframeIfVisible();
@@ -284,7 +388,7 @@ function kciMainButtons() {
 
   document.getElementById('kci__btn--close').addEventListener('click', function() {
       document.getElementById('kci__view').style.display = 'none';
-      document.getElementById('kci__menu--float').style.display = 'block';
+    //   document.getElementById('kci__menu--float').style.display = 'block';
   });
 
   // Add full-screen button and functionality
@@ -347,9 +451,53 @@ function adjustKciViewPosition() {
             kciView.style.right = '0';
             kciView.style.left = 'auto';
         }
+    } else {
+        console.warn('kci__view element not found in adjustKciViewPosition');
     }
 }
 
+
+function getGoogleSheetsCompanyInfo() {
+    // Find the active cell
+    const activeCell = document.querySelector('.active-cell-border');
+    if (!activeCell) return null;
+
+    // Get the row and column of the active cell
+    const row = activeCell.getAttribute('data-row');
+    const col = activeCell.getAttribute('data-col');
+
+    if (!row || !col) return null;
+
+    // Find the header cells
+    const headerCells = document.querySelectorAll('.column-headers-background .column-header-clip');
+    
+    // Find company name and website columns
+    let nameColumnIndex = -1;
+    let websiteColumnIndex = -1;
+
+    headerCells.forEach((cell, index) => {
+        const text = cell.textContent.toLowerCase().trim();
+        if (text === 'company name' || text === 'company') nameColumnIndex = index;
+        if (text === 'company website' || text === 'website') websiteColumnIndex = index;
+    });
+
+    console.log('Name column index:', nameColumnIndex);
+    console.log('Website column index:', websiteColumnIndex);
+
+    if (nameColumnIndex === -1 || websiteColumnIndex === -1) return null;
+
+    // Get the values from the active row
+    const rowCells = document.querySelectorAll(`[data-row="${row}"] .cell-content`);
+    
+    if (rowCells.length <= Math.max(nameColumnIndex, websiteColumnIndex)) return null;
+
+    const companyName = rowCells[nameColumnIndex].textContent.trim();
+    const website = rowCells[websiteColumnIndex].textContent.trim();
+
+    if (!companyName || !website) return null;
+
+    return { companyName, website };
+}
 
 function extractCompanyInfoFromGoogleSheets() {
     const rows = document.querySelectorAll('.row-header-wrapper');
@@ -377,4 +525,65 @@ function extractCompanyInfoFromGoogleSheets() {
     const website = selectedCells[websiteColumnIndex].textContent.trim();
 
     return { companyName, website };
+}
+
+
+function setupGoogleSheetsListener() {
+    if (window.location.href.includes('docs.google.com/spreadsheets')) {
+        document.addEventListener('click', function(event) {
+            if (event.target.closest('.row-header-wrapper')) {
+                setTimeout(runMain, 100); // Small delay to ensure the row is selected
+            }
+        });
+    }
+}
+
+function ensureIframeExists() {
+    let iframe = document.querySelector('#kci__iframe');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'kci__iframe';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        
+        const kciView = document.getElementById('kci__view');
+        if (kciView) {
+            kciView.appendChild(iframe);
+        } else {
+            console.error('kci__view element not found');
+            return null;
+        }
+    }
+    return iframe;
+}
+
+
+function setupButtonListeners() {
+    const fullScreenButton = document.getElementById('kci__btn--fullscreen');
+    const closeButton = document.getElementById('kci__btn--close');
+    const kciView = document.getElementById('kci__view');
+
+    let isFullScreen = false;
+
+    if (fullScreenButton) {
+        fullScreenButton.addEventListener('click', function() {
+            isFullScreen = !isFullScreen;
+            if (isFullScreen) {
+                kciView.style.width = '100%';
+                kciView.style.height = '100%';
+                fullScreenButton.textContent = 'Exit Full Screen';
+            } else {
+                kciView.style.width = '550px';
+                kciView.style.height = '100vh';
+                fullScreenButton.textContent = 'Full Screen';
+            }
+        });
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener('click', function() {
+            kciView.style.display = 'none';
+        });
+    }
 }
