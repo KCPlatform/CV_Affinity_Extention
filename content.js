@@ -133,7 +133,8 @@ function processAndAppendCompanyLink() {
 
 // Function to check if we're on a relevant page
 function isRelevantPage() {
-    return window.location.href.match(/https:\/\/[^\/]+\.affinity\.co/);
+    return window.location.href.match(/https:\/\/[^\/]+\.affinity\.co/) || 
+    window.location.href.match(/https:\/\/docs\.google\.com\/spreadsheets/);
 }
 
 // Function to run our main logic
