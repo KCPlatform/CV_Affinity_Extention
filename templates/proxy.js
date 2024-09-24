@@ -2,15 +2,18 @@ let CONFIG = {};
 
 function loadKaporAI(url) {
     const iframe = document.getElementById('kapor-iframe');
-    console.log("Loading Kapor AI URL:", url);
     if (iframe) {
-        iframe.src = url;
-        iframe.onload = function() {
-            console.log("Kapor AI iframe loaded successfully");
-        };
-        iframe.onerror = function() {
-            console.error("Kapor AI iframe failed to load");
-        };
+        if (iframe.src !== url) {
+            iframe.src = url;
+            iframe.onload = function() {
+                console.log("Kapor AI iframe loaded successfully");
+            };
+            iframe.onerror = function() {
+                console.error("Kapor AI iframe failed to load");
+            };
+        } else {
+            console.log("Kapor AI iframe already loaded with URL");
+        }
     } else {
         console.error("Kapor AI iframe not found");
     }
