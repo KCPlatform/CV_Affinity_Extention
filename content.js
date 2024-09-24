@@ -349,3 +349,32 @@ function adjustKciViewPosition() {
         }
     }
 }
+
+
+function extractCompanyInfoFromGoogleSheets() {
+    const rows = document.querySelectorAll('.row-header-wrapper');
+    if (rows.length === 0) return null;
+
+    const headerRow = rows[0];
+    const cells = headerRow.querySelectorAll('.cell-content');
+    
+    let nameColumnIndex = -1;
+    let websiteColumnIndex = -1;
+
+    cells.forEach((cell, index) => {
+        const text = cell.textContent.toLowerCase().trim();
+        if (text === 'company name') nameColumnIndex = index;
+        if (text === 'company website') websiteColumnIndex = index;
+    });
+
+    if (nameColumnIndex === -1 || websiteColumnIndex === -1) return null;
+
+    const selectedRow = document.querySelector('.focused');
+    if (!selectedRow) return null;
+
+    const selectedCells = selectedRow.querySelectorAll('.cell-content');
+    const companyName = selectedCells[nameColumnIndex].textContent.trim();
+    const website = selectedCells[websiteColumnIndex].textContent.trim();
+
+    return { companyName, website };
+}
