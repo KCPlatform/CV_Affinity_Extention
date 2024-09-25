@@ -79,12 +79,14 @@ fetch(chrome.runtime.getURL('templates/panel.html'))
 .then(response => response.text())
 .then(data => {
 
-    var container= document.createElement("div");
-    container.classList.add("kci");
-    container.id = "kci";
-    container.innerHTML = data;
-
-    document.body.appendChild(container);
+    let container = document.getElementById('kci');
+    if (!container) {
+        container = document.createElement("div");
+        container.classList.add("kci");
+        container.id = "kci";
+        document.body.appendChild(container);
+    }
+    container.innerHTML = data;  // Add this line to set the HTML content
 
     kciRunAfterPanelLoad();
     loadProxyIntoIframe(); 
@@ -135,6 +137,12 @@ function kciRunAfterPanelLoad() {
 
 
 function kciMainButtons() {
+  const targetDiv = document.getElementById("kci__menu--float");
+  if (!targetDiv) {
+    console.error("Element with ID 'kci__menu--float' not found");
+    return;
+  }
+
   const iconURL = chrome.runtime.getURL("icon-128.png");
   const iconElement = document.createElement("img");
   iconElement.alt = "KCI Tools";
@@ -142,7 +150,6 @@ function kciMainButtons() {
   iconElement.id = "kci__btn--open";
   iconElement.classList.add("kci__btn--open");
   
-  const targetDiv = document.getElementById("kci__menu--float");
   targetDiv.appendChild(iconElement);
 
   document.getElementById('kci__btn--open').addEventListener('click', function() {
@@ -227,7 +234,19 @@ function processAndAppendCompanyLink(service) {
     let companyInfo;
 
     if (service === 'googlesheets') {
-        getGoogleSheetsData();
+        getGoogleSheetsData()
+            .then(({ companyName, website }) => {
+                const kaporAiUrl = createKaporAiUrl(companyName, website, 'googlesheets');
+                sendDataToSidePanel({ companyName, website, kaporAiUrl });
+            })
+            .catch(error => {
+                if (error.needsLogin) {
+                    sendDataToSidePanel({ needsLogin: true });
+                } else {
+                    console.error('Error processing Google Sheets data:', error);
+                    sendDataToSidePanel({ error: error.message });
+                }
+            });
     }
 
     if (service === 'affinity') {
@@ -412,76 +431,73 @@ function setActiveTab(activeButton, inactiveButtons) {
 
 
 function getGoogleSheetsData() {
-    chrome.identity.getAuthToken({ interactive: true }, function(token) {
-        if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError);
-            return;
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ action: "getGoogleSheetsData" }, response => {
+      if (response.error) {
+        if (response.error === "browser_signin_disabled") {
+          reject(new Error("Browser sign-in is disabled"));
+        } else {
+          reject(new Error(response.error));
         }
+      } else {
+        resolve(response.data);
+      }
+    });
+  });
+}
 
-        // Get the current spreadsheet ID from the URL
-        const spreadsheetId = getSpreadsheetIdFromUrl();
-        
-        // Get the active sheet and cell
-        getCurrentSheetAndCell(token, spreadsheetId)
-            .then(({ sheetId, rowIndex, columnIndex }) => {
-                // Get the header row to find company name and website columns
-                return getHeaderRow(token, spreadsheetId, sheetId)
-                    .then(headerRow => {
-                        const nameColumnIndex = headerRow.findIndex(cell => cell.toLowerCase().includes('company name'));
-                        const websiteColumnIndex = headerRow.findIndex(cell => cell.toLowerCase().includes('website'));
-                        
-                        if (nameColumnIndex === -1 || websiteColumnIndex === -1) {
-                            throw new Error('Could not find company name or website columns');
-                        }
-
-                        // Get the data for the active row
-                        return getRowData(token, spreadsheetId, sheetId, rowIndex, nameColumnIndex, websiteColumnIndex);
-                    });
-            })
-            .then(({ companyName, website }) => {
-                console.log('Company Name:', companyName);
-                console.log('Website:', website);
-                // Process the company info as needed
-                const kaporAiUrl = createKaporAiUrl(companyName, website, 'googlesheets');
-                if (kaporAiUrl) {
-                    updateIframeWithUrl(kaporAiUrl);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+function handleGoogleSheetsData() {
+  getGoogleSheetsData()
+    .then(data => {
+      console.log("Google Sheets data:", data);
+      // Process the data
+      updateUI(data);
+    })
+    .catch(error => {
+      console.error("Error processing Google Sheets data:", error);
+      if (error.message === "Browser sign-in is disabled") {
+        showSignInPrompt();
+      } else {
+        showErrorMessage(error.message);
+      }
     });
 }
 
-function getSpreadsheetIdFromUrl() {
-    const match = window.location.href.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-    return match ? match[1] : null;
+function showSignInPrompt() {
+  const message = `
+    To use this feature, you need to enable browser sign-in for Chrome. 
+    Please follow these steps:
+    1. Open Chrome settings (chrome://settings/)
+    2. Go to the "You and Google" section
+    3. Turn on "Allow Chrome sign-in"
+    4. Sign in to your Google account in Chrome
+    5. Refresh this page and try again
+  `;
+  
+  // Display this message in your UI
+  // For example:
+  const errorDiv = document.createElement('div');
+  errorDiv.textContent = message;
+  errorDiv.style.color = 'red';
+  errorDiv.style.padding = '10px';
+  errorDiv.style.border = '1px solid red';
+  document.body.insertBefore(errorDiv, document.body.firstChild);
 }
 
-function getCurrentSheetAndCell(token, spreadsheetId) {
-    return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=spreadsheetId,properties.title,sheets.properties,sheets.data.rowData.values`)
-        .then(response => response.json())
-        .then(data => {
-            // Logic to determine current sheet and cell
-            // This is a placeholder and needs to be implemented based on the API response
-            return { sheetId: data.sheets[0].properties.sheetId, rowIndex: 0, columnIndex: 0 };
-        });
+function showErrorMessage(message) {
+  // Display a generic error message in your UI
+  const errorDiv = document.createElement('div');
+  errorDiv.textContent = `An error occurred: ${message}`;
+  errorDiv.style.color = 'red';
+  document.body.insertBefore(errorDiv, document.body.firstChild);
 }
 
-function getHeaderRow(token, spreadsheetId, sheetId) {
-    return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetId}!1:1`)
-        .then(response => response.json())
-        .then(data => data.values[0]);
+function updateUI(data) {
+  // Update your UI with the fetched data
 }
 
-function getRowData(token, spreadsheetId, sheetId, rowIndex, nameColumnIndex, websiteColumnIndex) {
-    return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetId}!${rowIndex + 1}:${rowIndex + 1}`)
-        .then(response => response.json())
-        .then(data => ({
-            companyName: data.values[0][nameColumnIndex],
-            website: data.values[0][websiteColumnIndex]
-        }));
-}
+// Call this function when you need to fetch Google Sheets data
+handleGoogleSheetsData();
 
 function updateIframeWithUrl(url) {
     const iframe = document.getElementById('kci__iframe');
@@ -491,3 +507,41 @@ function updateIframeWithUrl(url) {
         }
     }
 }
+
+function isGoogleSpreadsheet(url) {
+  return url.startsWith('https://docs.google.com/spreadsheets/');
+}
+
+function sendDataToSidePanel(data) {
+  if (isGoogleSpreadsheet(window.location.href)) {
+    if (chrome.runtime && chrome.runtime.id) {
+        chrome.runtime.sendMessage({action: "updateSidePanel", data: data}, function(response) {
+            if (chrome.runtime.lastError) {
+                console.log(chrome.runtime.lastError.message);
+            } else {
+                // Handle response
+            }
+        });
+    } else {
+        console.log("Extension context invalid");
+    }
+  }
+}
+
+// Call this function when you have new data to send to the side panel
+sendDataToSidePanel({ companyName: "Example Corp", website: "example.com" });
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "getKaporAiUrl") {
+        console.log("Received message to get Kapor AI URL");
+        const url = createKaporAiUrl(request.data.companyName, request.data.website);
+        console.log("Kapor AI URL:", url);
+        sendResponse({url: url});
+    }
+    return true;  // Indicates that the response is sent asynchronously
+});
+
+window.kaporAiExtension = {
+    createKaporAiUrl: createKaporAiUrl,
+    getGoogleSheetsData: getGoogleSheetsData
+};
