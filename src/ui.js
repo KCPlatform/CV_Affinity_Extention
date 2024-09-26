@@ -1,7 +1,7 @@
 // ui.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.ui = {
+window.KaporAIExt.ui = {
   loadHtmlTemplate: function() {
     var self = this;
     fetch(chrome.runtime.getURL('templates/panel.html'))
@@ -26,7 +26,7 @@ window.MyExtension.ui = {
   },
 
   loadProxyIntoIframe: function(service = 'chrome') {
-    const constants = window.MyExtension.constants;
+    const constants = window.KaporAIExt.constants;
 
     const iframe = document.getElementById('kci__iframe');
     if (iframe) {
@@ -58,7 +58,7 @@ window.MyExtension.ui = {
   kciRunAfterPanelLoad: function() {
     this.kciHotKeys();
     this.kciMainButtons();
-    window.MyExtension.utils.adjustKciViewPosition();
+    window.KaporAIExt.utils.adjustKciViewPosition();
   },
 
   kciHotKeys: function() {
@@ -149,7 +149,7 @@ window.MyExtension.ui = {
       if (menuFloat) {
         menuFloat.style.display = 'none';
       }
-      window.MyExtension.utils.adjustKciViewPosition();
+      window.KaporAIExt.utils.adjustKciViewPosition();
       this.updateIframeIfVisible();
     } else {
       console.error('kci__view element not found');
@@ -198,8 +198,8 @@ window.MyExtension.ui = {
   },
 
   updateIframeIfVisible: function(url = null) {
-    const constants = window.MyExtension.constants;
-    const CONFIG = window.MyExtension.CONFIG;
+    const constants = window.KaporAIExt.constants;
+    const CONFIG = window.KaporAIExt.CONFIG;
 
     const kciView = document.getElementById('kci__view');
     const iframe = document.getElementById('kci__iframe');

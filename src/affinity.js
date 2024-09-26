@@ -1,7 +1,7 @@
 // affinity.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.affinity = {
+window.KaporAIExt.affinity = {
   getAffinityCompanyInfo: function() {
     let nameElement, websiteElement;
 

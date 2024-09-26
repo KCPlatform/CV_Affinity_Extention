@@ -1,11 +1,11 @@
 // googleSheets.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.googleSheets = {
+window.KaporAIExt.googleSheets = {
   handleCellClick: function(event) {
-    const constants = window.MyExtension.constants;
-    const process = window.MyExtension.process;
-    const utils = window.MyExtension.utils;
+    const constants = window.KaporAIExt.constants;
+    const process = window.KaporAIExt.process;
+    const utils = window.KaporAIExt.utils;
 
     let nameBox = document.querySelector('input#t-name-box');
     if (nameBox) {
@@ -26,9 +26,9 @@ window.MyExtension.googleSheets = {
   },
 
   getGoogleSheetsData: function() {
-    const utils = window.MyExtension.utils;
-    const constants = window.MyExtension.constants;
-    const cache = window.MyExtension.cache;
+    const utils = window.KaporAIExt.utils;
+    const constants = window.KaporAIExt.constants;
+    const cache = window.KaporAIExt.cache;
 
     const { spreadsheetId } = this.getSpreadsheetInfoFromUrl();
     if (!spreadsheetId) {
@@ -70,8 +70,8 @@ window.MyExtension.googleSheets = {
   },
 
   initializeSheetObserver: function() {
-    const constants = window.MyExtension.constants;
-    const process = window.MyExtension.process;
+    const constants = window.KaporAIExt.constants;
+    const process = window.KaporAIExt.process;
 
     const observeActiveSheetChange = (callback) => {
       if (constants.sheetObserver) {
@@ -110,8 +110,8 @@ window.MyExtension.googleSheets = {
 
     observeActiveSheetChange((activeSheetName) => {
       console.log('Active sheet changed to:', activeSheetName);
-      window.MyExtension.cache.clearCache('all');
-      window.MyExtension.process.processAndAppendCompanyLink('googlesheets');
+      window.KaporAIExt.cache.clearCache('all');
+      window.KaporAIExt.process.processAndAppendCompanyLink('googlesheets');
     });
   },
 

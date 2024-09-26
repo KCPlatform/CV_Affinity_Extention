@@ -1,13 +1,13 @@
 // main.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.main = {
+window.KaporAIExt.main = {
   runMain: function() {
-    const utils = window.MyExtension.utils;
-    const process = window.MyExtension.process;
-    const googleSheets = window.MyExtension.googleSheets;
-    const constants = window.MyExtension.constants;
-    const ui = window.MyExtension.ui;
+    const utils = window.KaporAIExt.utils;
+    const process = window.KaporAIExt.process;
+    const googleSheets = window.KaporAIExt.googleSheets;
+    const constants = window.KaporAIExt.constants;
+    const ui = window.KaporAIExt.ui;
 
     let service = utils.isRelevantService();
     if (service) {

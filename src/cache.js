@@ -1,7 +1,7 @@
 // cache.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.cache = {
+window.KaporAIExt.cache = {
   sheetsData: {
     data: null,
     timestamp: 0,
@@ -13,9 +13,9 @@ window.MyExtension.cache = {
 
   getCachedOrFetchedData: function() {
     const now = Date.now();
-    const constants = window.MyExtension.constants;
-    const cache = window.MyExtension.cache;
-    const googleSheets = window.MyExtension.googleSheets;
+    const constants = window.KaporAIExt.constants;
+    const cache = window.KaporAIExt.cache;
+    const googleSheets = window.KaporAIExt.googleSheets;
 
     if (cache.sheetsData.data && (now - cache.sheetsData.timestamp < constants.SHEETS_CACHE_DURATION)) {
       console.log('Using cached sheets data');

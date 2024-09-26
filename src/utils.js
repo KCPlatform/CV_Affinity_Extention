@@ -1,7 +1,7 @@
 // utils.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.utils = (function() {
+window.KaporAIExt.utils = (function() {
   let lastUrl = '';
 
   function hasUrlChanged() {

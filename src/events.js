@@ -1,11 +1,11 @@
 // events.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.events = {
+window.KaporAIExt.events = {
   initializeEventListeners: function() {
-    const googleSheets = window.MyExtension.googleSheets;
-    const main = window.MyExtension.main;
-    const utils = window.MyExtension.utils;
+    const googleSheets = window.KaporAIExt.googleSheets;
+    const main = window.KaporAIExt.main;
+    const utils = window.KaporAIExt.utils;
 
     // Handle cell clicks in Google Sheets
     document.addEventListener('click', googleSheets.handleCellClick);

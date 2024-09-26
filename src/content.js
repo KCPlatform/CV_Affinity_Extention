@@ -1,4 +1,4 @@
 // content.js
 // Initialize the extension
-window.MyExtension.main.runMain();
-window.MyExtension.events.initializeEventListeners();
+window.KaporAIExt.main.runMain();
+window.KaporAIExt.events.initializeEventListeners();

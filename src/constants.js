@@ -1,7 +1,7 @@
 // constants.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.constants = {
+window.KaporAIExt.constants = {
   lastProcessedData: null,
   lastKaporAiUrl: null,
   iframeWasLoaded: false,

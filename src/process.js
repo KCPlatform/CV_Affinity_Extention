@@ -1,12 +1,12 @@
 // process.js
-window.MyExtension = window.MyExtension || {};
+window.KaporAIExt = window.KaporAIExt || {};
 
-window.MyExtension.process = {
+window.KaporAIExt.process = {
   processAndAppendCompanyLink: function(service) {
-    const affinity = window.MyExtension.affinity;
-    const googleSheets = window.MyExtension.googleSheets;
-    const constants = window.MyExtension.constants;
-    const ui = window.MyExtension.ui;
+    const affinity = window.KaporAIExt.affinity;
+    const googleSheets = window.KaporAIExt.googleSheets;
+    const constants = window.KaporAIExt.constants;
+    const ui = window.KaporAIExt.ui;
 
     if (service === 'googlesheets') {
       console.log('Getting Google Sheets company info');
@@ -43,9 +43,9 @@ window.MyExtension.process = {
   },
 
   processAndHandleEntry: function(selectedDataRow) {
-    const utils = window.MyExtension.utils;
-    const cache = window.MyExtension.cache;
-    const constants = window.MyExtension.constants;
+    const utils = window.KaporAIExt.utils;
+    const cache = window.KaporAIExt.cache;
+    const constants = window.KaporAIExt.constants;
 
     return new Promise((resolve, reject) => {
       if (!utils.hasUrlChanged()) {
@@ -71,7 +71,7 @@ window.MyExtension.process = {
   },
 
   processSelectedRow: function(selectedDataRow) {
-    const cache = window.MyExtension.cache;
+    const cache = window.KaporAIExt.cache;
 
     return new Promise((resolve, reject) => {
       if (selectedDataRow == null || isNaN(selectedDataRow)) {
@@ -157,9 +157,9 @@ window.MyExtension.process = {
   },
 
   buildKaporAiUrl: function(company, website, service = 'chrome') {
-    const constants = window.MyExtension.constants;
-    const ui = window.MyExtension.ui;
-    const CONFIG = window.MyExtension.CONFIG;
+    const constants = window.KaporAIExt.constants;
+    const ui = window.KaporAIExt.ui;
+    const CONFIG = window.KaporAIExt.CONFIG;
 
     if (company && website) {
       console.log('Company name found:', company);
