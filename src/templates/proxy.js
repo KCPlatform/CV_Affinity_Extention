@@ -6,27 +6,37 @@ function loadKaporAI(url) {
         if (iframe.src !== url) {
             iframe.src = url;
             iframe.onload = function() {
-                console.log("Kapor AI iframe loaded successfully");
+                console.log("Kapor AI iframe loaded successfully", url);
             };
             iframe.onerror = function() {
-                console.error("Kapor AI iframe failed to load");
+                console.error("Kapor AI iframe failed to load", url);
             };
         } else {
-            console.log("Kapor AI iframe already loaded with URL");
+            console.log("Kapor AI iframe already loaded with URL", url);
         }
     } else {
-        console.error("Kapor AI iframe not found");
+        console.error("Kapor AI iframe not found", url);
     }
 }
 
-// Add a message listener to handle URL changes and config from the parent
+
 window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'config') {
-        CONFIG = event.data.config;
-        console.log("Received config:", CONFIG);
-        // Initial load after receiving config
-        loadKaporAI(`${CONFIG.KAPOR_AI_BASE_URL}/search?hide_header=true&source=affinity`);
-    } else if (event.data && event.data.type === 'loadUrl') {
-        loadKaporAI(event.data.url);
+    
+    console.log('Received message:', event.data);
+
+    if ( event.data && event.data.type === 'loadUrl' ) {
+
+        if ( event.data.url == null ) {
+            
+            if (event.data.config) {
+                loadKaporAI(`${event.data.config.KAPOR_AI_BASE_URL}/search?hide_header=true&source=chrome`);
+            }
+
+        } else {
+
+            loadKaporAI(event.data.url);
+
+        }
+
     }
 });

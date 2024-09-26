@@ -1,3 +1,43 @@
+let lastProcessedData = null;
+let lastKaporAiUrl = null;
+let iframeWasLoaded = false;
+let isDataLoaded = false;
+// Global cache object
+let cache = {
+    sheetsData: {
+      data: null,
+      timestamp: 0
+    },
+    selection: {
+      data: null,
+      timestamp: 0
+    }
+  };
+  
+  // Cache duration in milliseconds
+  const SHEETS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for sheet data
+  const SELECTION_CACHE_DURATION = 5 * 1000; // 5 seconds for selection data
+  
+// Function to check if the URL has changed
+function hasUrlChanged() {
+    const currentUrl = window.location.href;
+    if (currentUrl !== hasUrlChanged.lastUrl) {
+      hasUrlChanged.lastUrl = currentUrl;
+      return true;
+    }
+    return false;
+  }
+hasUrlChanged.lastUrl = '';
+
+// Function to handle URL changes
+function handleUrlChange() {
+    if (hasUrlChanged()) {
+      console.log('URL changed, processing data');
+      processGoogleSheetsData();
+    }
+  }
+  
+
 // Function to check if we're on a relevant service
 function isRelevantService() {
     if (window.location.href.match(/https:\/\/[^\/]+\.affinity\.co/)) {
@@ -16,19 +56,58 @@ function runMain() {
     }
 }
 
-runMain();
+if ( !isDataLoaded ) {
+    runMain();
+    isDataLoaded = true;
+}
 // adjustKciViewPosition(); 
 
 // Set up a MutationObserver to watch for changes
-const observer = new MutationObserver((mutations) => {
-    for (let mutation of mutations) {
-        if (mutation.type === 'childList' || mutation.type === 'subtree') {
-            runMain();
-            break;
-        }
+// const observer = new MutationObserver((mutations) => {
+//     for (let mutation of mutations) {
+//         if (mutation.type === 'childList' || mutation.type === 'subtree') {
+//             runMain();
+//             break;
+//         }
+//     }
+// });
+// observer.observe(document.body, { childList: true, subtree: true });
+
+// Set up a MutationObserver to watch for URL changes
+// const observerUrlChange = new MutationObserver(handleUrlChange);
+// observerUrlChange.observe(document.querySelector('title'), { subtree: true, characterData: true, childList: true });
+
+// setInterval(handleUrlChange, 5000);
+
+// Function to handle cell clicks
+function handleCellClick(event) {
+    let nameBox = document.querySelector('input#t-name-box');
+    let selectedDataRow = null;
+
+    if (nameBox) {
+        console.log('Name box found:', nameBox.value);
+        let nameBoxValue = nameBox.value;
+        selectedDataRow = nameBoxValue.replace(/^[A-Za-z]+/, '');
+        selectedDataRow = selectedDataRow - 1;
+        console.log('Selected data row:', selectedDataRow);
+
+        processAndHandleEntry(selectedDataRow)
+        .then(companyInfo => {
+            if (companyInfo) {
+                console.log('Company info:', companyInfo);
+                buildKaporAiUrl(companyInfo.company, companyInfo.website, 'googlesheets');
+            } else {
+                console.log('No company info available');
+            }
+        })
+        .catch(error => {
+            console.error('Error getting company info:', error);
+        });
     }
-});
-observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// Set up event listener for cell clicks
+document.addEventListener('click', handleCellClick);
   
 // Also run when the URL changes (for single-page apps)
 let lastUrl = location.href;
@@ -42,7 +121,7 @@ new MutationObserver(() => {
 }).observe(document, {subtree: true, childList: true});
 
 
-function loadProxyIntoIframe() {
+function loadProxyIntoIframe(service = 'chrome') {
   const iframe = document.getElementById('kci__iframe');
   if (iframe) {
       const proxyUrl = chrome.runtime.getURL('templates/proxy.html');
@@ -54,15 +133,11 @@ function loadProxyIntoIframe() {
       
       iframe.onload = function() {
           console.log('Proxy iframe loaded successfully');
-          // Pass the CONFIG to the proxy
-          iframe.contentWindow.postMessage({
-              type: 'config',
-              config: { KAPOR_AI_BASE_URL: CONFIG.KAPOR_AI_BASE_URL }
-          }, '*');
-          // Send initial URL to load
+          iframeWasLoaded = true;
           iframe.contentWindow.postMessage({
               type: 'loadUrl',
-              url: `${CONFIG.KAPOR_AI_BASE_URL}?hide_header=true&source=affinity`
+              config: { KAPOR_AI_BASE_URL: CONFIG.KAPOR_AI_BASE_URL },
+              url: `${CONFIG.KAPOR_AI_BASE_URL}?hide_header=true&source=${service}`
           }, '*');
       };
       
@@ -202,18 +277,30 @@ function kciMainButtons() {
   });
 }
 
-let lastKaporAiUrl = null;
 
-function updateIframeIfVisible() {
+function updateIframeIfVisible(url = null) {
     const kciView = document.getElementById('kci__view');
     const iframe = document.getElementById('kci__iframe');
+
+    if ( !kciView || kciView.style.display == 'none' || !iframe || !iframe.contentWindow ) {
+        return;
+    }
+
+    if ( url ) {
+        console.log('Updating iframe with new URL:', url);
+        iframe.contentWindow.postMessage({
+            type: 'loadUrl',
+            url: url
+        }, '*');
     
-    if (kciView && kciView.style.display !== 'none' && iframe && iframe.contentWindow && lastKaporAiUrl) {
+    } else if ( lastKaporAiUrl ) {
+        console.log('Updating iframe with last URL:', lastKaporAiUrl);
         iframe.contentWindow.postMessage({
             type: 'loadUrl',
             url: lastKaporAiUrl
         }, '*');
-    }
+    } 
+
 }
 
 function adjustKciViewPosition() {
@@ -229,24 +316,170 @@ function adjustKciViewPosition() {
     }
 }
 
+function processAndHandleEntry(selectedDataRow) {
+    return new Promise((resolve, reject) => {
+        if (!hasUrlChanged()) {
+            console.log('URL has not changed');
+            processSelectedRow(selectedDataRow)
+                .then(entry => {
+                    if (entry) {
+                        console.log('Processing entry:', entry);
+                        // Add your logic here to handle the entry
+                        resolve(entry); // Resolve the promise with the entry
+                    } else {
+                        console.log('No valid entry found');
+                        resolve(null); // Resolve with null if no valid entry
+                    }
+                })
+                .catch(error => {
+                    console.error('Error processing selected row:', error);
+                    reject(error); // Reject the promise if there's an error
+                });
+        } else {
+            console.log('URL has changed, resetting process');
+            clearCache('all');
+            // Additional logic for URL change if needed
+            resolve(null); // Resolve with null if URL has changed
+        }
+    });
+}
+
+function processSelectedRow(selectedDataRow) {
+    return new Promise((resolve, reject) => {
+        if (!selectedDataRow && selectedDataRow !== 0) {
+            console.log('No row selected');
+            resolve(null);
+            return;
+        }
+
+        console.log('Selected data row:', selectedDataRow);
+
+        getCachedOrFetchedData()
+            .then(sheetsData => {
+                if (!sheetsData || sheetsData.length <= selectedDataRow) {
+                    console.log('Selected row is out of range, fetching updated data');
+                    clearCache('sheets');
+                    return getCachedOrFetchedData();
+                }
+                return sheetsData;
+            })
+            .then(sheetsData => {
+                if (!sheetsData || sheetsData.length <= selectedDataRow) {
+                    console.log('Selected row is still out of range after update');
+                    resolve(null);
+                } else {
+                    resolve(extractEntryFromRow(sheetsData, selectedDataRow));
+                }
+            })
+            .catch(reject);
+    });
+}
+
+function getCachedOrFetchedData() {
+    const now = Date.now();
+    if (cache.sheetsData.data && (now - cache.sheetsData.timestamp < SHEETS_CACHE_DURATION)) {
+        console.log('Using cached sheets data');
+        return Promise.resolve(cache.sheetsData.data);
+    }
+
+    console.log('Fetching fresh sheets data');
+    return getGoogleSheetsData()
+        .then(freshData => {
+            cache.sheetsData = { data: freshData, timestamp: now };
+            return freshData;
+        });
+}
+
+function extractEntryFromRow(sheetsData, rowIndex) {
+    const headers = sheetsData[0];
+    const selectedRowData = sheetsData[rowIndex];
+
+    const relevantColumns = {
+        company: headers.findIndex(header => {
+            const lowerHeader = header.toLowerCase().trim();
+            return lowerHeader.includes('company') || lowerHeader.includes('organization');
+        }),
+        website: headers.findIndex(header => {
+            const lowerHeader = header.toLowerCase().trim();
+            return lowerHeader.includes('website') || lowerHeader.includes('url') || lowerHeader.includes('web address');
+        }),
+        email: headers.findIndex(header => {
+            const lowerHeader = header.toLowerCase().trim();
+            return lowerHeader.includes('email') || lowerHeader.includes('email address') || lowerHeader.includes('e-mail');
+        })
+    };
+
+    let entry = {};
+    if (relevantColumns.company !== -1) {
+        entry.company = selectedRowData[relevantColumns.company];
+    }
+    if (relevantColumns.website !== -1) {
+        entry.website = selectedRowData[relevantColumns.website];
+    }
+    if (relevantColumns.email !== -1) {
+        entry.email = selectedRowData[relevantColumns.email];
+    }
+
+    // If company doesn't exist but website does, set company to website
+    if (!entry.company && entry.website) {
+        entry.company = entry.website;
+    }
+
+    if ( !entry.company && !entry.website && entry.email ) {
+        // strip email domain from email
+        let emailParts = entry.email.split('@');
+        if (emailParts.length > 1) {
+            entry.company = emailParts[1];
+            entry.website = emailParts[1];
+        }
+    }
+
+    if ( !entry.company && !entry.website ) {
+        console.log('No company, website, or email found');
+        return null;
+    }
+
+    console.log('Extracted entry:', entry);
+    return entry;
+}
+
 
 function processAndAppendCompanyLink(service) {
     let companyInfo;
+    let companyName;
+    let companyWebsite;
 
     if (service === 'googlesheets') {
-        getGoogleSheetsData()
-            .then(({ companyName, website }) => {
-                const kaporAiUrl = createKaporAiUrl(companyName, website, 'googlesheets');
-                sendDataToSidePanel({ companyName, website, kaporAiUrl });
+
+        console.log('Getting Google Sheets company info');
+
+        let nameBox = document.querySelector('input#t-name-box');
+        let selectedDataRow = null;
+
+        if (nameBox) {
+            console.log('Name box found:', nameBox.value);
+            let nameBoxValue = nameBox.value;
+            selectedDataRow = nameBoxValue.replace(/^[A-Za-z]+/, '');
+            selectedDataRow = selectedDataRow - 1;
+            console.log('Selected data row:', selectedDataRow);
+        }
+
+        // Don't run on initial load wait for click
+        if ( isDataLoaded ) {
+            processAndHandleEntry(selectedDataRow)
+            .then(companyInfo => {
+                if (companyInfo) {
+                    console.log('Company info:', companyInfo);
+                    buildKaporAiUrl(companyInfo.company, companyInfo.website, 'googlesheets');
+                } else {
+                    console.log('No company info available');
+                }
             })
             .catch(error => {
-                if (error.needsLogin) {
-                    sendDataToSidePanel({ needsLogin: true });
-                } else {
-                    console.error('Error processing Google Sheets data:', error);
-                    sendDataToSidePanel({ error: error.message });
-                }
+                console.error('Error getting company info:', error);
             });
+        }
+
     }
 
     if (service === 'affinity') {
@@ -255,28 +488,48 @@ function processAndAppendCompanyLink(service) {
         companyInfo = getAffinityCompanyInfo();
     
         if (companyInfo) {
-            const { companyName, website } = companyInfo;
-            console.log('Company name found:', companyName);
-            console.log('Website found:', website);
-        
-            const kaporAiUrl = createKaporAiUrl(companyName, website, service);
-            lastKaporAiUrl = kaporAiUrl;
 
-            if (kaporAiUrl) {
-          
-                const iframe = ensureIframeExists();
-                if (iframe) {
-                    loadProxyIntoIframe(kaporAiUrl);
-                }
+            buildKaporAiUrl(companyInfo.companyName, companyInfo.website, 'affinity');
 
-                addKaporAiTab(kaporAiUrl);
+        }
 
+    } 
+
+}
+
+function buildKaporAiUrl(company, website, service = 'chrome') {
+
+    if (company && website) {
+
+        console.log('Company name found:', company);    
+        console.log('Website found:', website);
+    
+        const kaporAiUrl = createKaporAiUrl(company, website, service);
+        console.log('Kapor AI URL:', kaporAiUrl);
+        console.log('Last Kapor AI URL:', lastKaporAiUrl);
+        lastKaporAiUrl = kaporAiUrl;
+        console.log('Updated Kapor AI URL:', lastKaporAiUrl);
+
+        if (kaporAiUrl) {
+      
+            const iframe = ensureIframeExists();
+
+            if (iframe && iframeWasLoaded == false) {
+                loadProxyIntoIframe(service);
             }
+
+            if ( service === 'affinity') {
+                addKaporAiTab(kaporAiUrl);
+            }
+
+            updateIframeIfVisible(kaporAiUrl);
+
         }
 
     } else {
         console.log('Company information not found');
     }
+
 }
 
 function ensureIframeExists() {
@@ -326,12 +579,12 @@ function getAffinityCompanyInfo() {
 }
 
 
-function createKaporAiUrl(companyName, website) {
+function createKaporAiUrl(company, website, service = 'chrome') {
 
-    if ( companyName && website ) {
-        return `${CONFIG.KAPOR_AI_BASE_URL}/company-report/?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(companyName)}&source=affinity&hide_header=true`;
+    if ( company && website ) {
+        return `${CONFIG.KAPOR_AI_BASE_URL}/company-report/?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(company)}&source=${service}&hide_header=true`;
     } else {
-        return `${CONFIG.KAPOR_AI_BASE_URL}?&source=affinity&hide_header=true`;
+        return `${CONFIG.KAPOR_AI_BASE_URL}?&source=${service}&hide_header=true`;
     }
 }
 
@@ -429,75 +682,79 @@ function setActiveTab(activeButton, inactiveButtons) {
     inactiveButtons.forEach(button => button.removeAttribute('data-state'));
 }
 
+function getSpreadsheetInfoFromUrl() {
+    const url = window.location.href;
+    const spreadsheetIdMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    const sheetNameMatch = url.match(/[#&]gid=\d+(&range=([^&]+))?/);
+    
+    const spreadsheetId = spreadsheetIdMatch ? spreadsheetIdMatch[1] : null;
+    let sheetName = 'Sheet1'; // Default sheet name
+    
+    if (sheetNameMatch && sheetNameMatch[2]) {
+      // If a specific range is selected in the URL, use the sheet name from that
+      sheetName = decodeURIComponent(sheetNameMatch[2].split('!')[0]);
+    } else {
+      // Try to get the sheet name from the page title
+    //   const titleMatch = document.title.match(/^(.+) - Google Sheets/);
+    //   if (titleMatch) {
+    //     sheetName = titleMatch[1];
+    //   }
+    }
+    console.log('Spreadsheet ID:', spreadsheetId);
+    console.log('Sheet Name:', sheetName);
+    
+    return { spreadsheetId, sheetName };
+  }
+
 
 function getGoogleSheetsData() {
+  const { spreadsheetId, sheetName } = getSpreadsheetInfoFromUrl();
+  if (!spreadsheetId) {
+    return Promise.reject(new Error('No spreadsheet ID found in URL'));
+  }
+
+  const now = Date.now();
+  if (cache.sheetsData.data && (now - cache.sheetsData.timestamp < SHEETS_CACHE_DURATION)) {
+    console.log('Using cached sheets data');
+    return Promise.resolve(cache.sheetsData.data);
+  }
+
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ action: "getGoogleSheetsData" }, response => {
-      if (response.error) {
-        if (response.error === "browser_signin_disabled") {
-          reject(new Error("Browser sign-in is disabled"));
-        } else {
-          reject(new Error(response.error));
-        }
+    chrome.runtime.sendMessage({ 
+      action: "getGoogleSheetsData",
+      spreadsheetId: spreadsheetId,
+      sheetName: sheetName
+    }, response => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else if (response.error) {
+        reject(new Error(response.error));
       } else {
+        console.log('RESOLVED Google Sheets data:', response.data);
+        cache.sheetsData.data = response.data;
+        cache.sheetsData.timestamp = now;
         resolve(response.data);
       }
     });
   });
 }
 
-function handleGoogleSheetsData() {
-  getGoogleSheetsData()
-    .then(data => {
-      console.log("Google Sheets data:", data);
-      // Process the data
-      updateUI(data);
-    })
-    .catch(error => {
-      console.error("Error processing Google Sheets data:", error);
-      if (error.message === "Browser sign-in is disabled") {
-        showSignInPrompt();
-      } else {
-        showErrorMessage(error.message);
-      }
-    });
+function clearCache(type = 'all') {
+  const now = 0;
+  if (type === 'all' || type === 'sheets') {
+    cache.sheetsData = { data: null, timestamp: now };
+  }
+  if (type === 'all' || type === 'selection') {
+    cache.selection = { data: null, timestamp: now };
+  }
 }
 
-function showSignInPrompt() {
-  const message = `
-    To use this feature, you need to enable browser sign-in for Chrome. 
-    Please follow these steps:
-    1. Open Chrome settings (chrome://settings/)
-    2. Go to the "You and Google" section
-    3. Turn on "Allow Chrome sign-in"
-    4. Sign in to your Google account in Chrome
-    5. Refresh this page and try again
-  `;
-  
-  // Display this message in your UI
-  // For example:
-  const errorDiv = document.createElement('div');
-  errorDiv.textContent = message;
-  errorDiv.style.color = 'red';
-  errorDiv.style.padding = '10px';
-  errorDiv.style.border = '1px solid red';
-  document.body.insertBefore(errorDiv, document.body.firstChild);
-}
 
-function showErrorMessage(message) {
-  // Display a generic error message in your UI
-  const errorDiv = document.createElement('div');
-  errorDiv.textContent = `An error occurred: ${message}`;
-  errorDiv.style.color = 'red';
-  document.body.insertBefore(errorDiv, document.body.firstChild);
-}
-
-function updateUI(data) {
-  // Update your UI with the fetched data
-}
-
-// Call this function when you need to fetch Google Sheets data
-handleGoogleSheetsData();
+// Example of how to use clearCache (e.g., attach to a refresh button)
+// document.getElementById('refreshButton').addEventListener('click', () => {
+//   clearCache('all');
+//   // Then re-fetch data...
+// });
 
 function updateIframeWithUrl(url) {
     const iframe = document.getElementById('kci__iframe');
@@ -512,24 +769,24 @@ function isGoogleSpreadsheet(url) {
   return url.startsWith('https://docs.google.com/spreadsheets/');
 }
 
-function sendDataToSidePanel(data) {
-  if (isGoogleSpreadsheet(window.location.href)) {
-    if (chrome.runtime && chrome.runtime.id) {
-        chrome.runtime.sendMessage({action: "updateSidePanel", data: data}, function(response) {
-            if (chrome.runtime.lastError) {
-                console.log(chrome.runtime.lastError.message);
-            } else {
-                // Handle response
-            }
-        });
-    } else {
-        console.log("Extension context invalid");
-    }
-  }
-}
+// function sendDataToSidePanel(data) {
+//   if (isGoogleSpreadsheet(window.location.href)) {
+//     if (chrome.runtime && chrome.runtime.id) {
+//         chrome.runtime.sendMessage({action: "updateSidePanel", data: data}, function(response) {
+//             if (chrome.runtime.lastError) {
+//                 console.log(chrome.runtime.lastError.message);
+//             } else {
+//                 // Handle response
+//             }
+//         });
+//     } else {
+//         console.log("Extension context invalid");
+//     }
+//   }
+// }
 
 // Call this function when you have new data to send to the side panel
-sendDataToSidePanel({ companyName: "Example Corp", website: "example.com" });
+// sendDataToSidePanel({ companyName: "Example Corp", website: "example.com" });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "getKaporAiUrl") {
@@ -540,6 +797,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
     return true;  // Indicates that the response is sent asynchronously
 });
+
 
 window.kaporAiExtension = {
     createKaporAiUrl: createKaporAiUrl,

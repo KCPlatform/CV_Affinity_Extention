@@ -103,21 +103,49 @@ function isGoogleSpreadsheet(url) {
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getGoogleSheetsData") {
-      chrome.identity.getAuthToken({ interactive: true }, function(token) {
-        if (chrome.runtime.lastError) {
-          sendResponse({ error: chrome.runtime.lastError.message });
-        } else {
-          // Use the token to make API requests
-          fetchGoogleSheetsData(token)
-            .then(data => sendResponse({ data: data }))
-            .catch(error => sendResponse({ error: error.message }));
-        }
-      });
-      return true; // Indicates that the response is sent asynchronously
-    }
+      console.log('Received request for Google Sheets data');
+      fetchGoogleSheetsData(request.spreadsheetId)
+        .then(data => {
+          console.log('Fetched Google Sheets data:', data);
+          sendResponse({ data: data });
+        })
+        .catch(error => {
+          console.error('Error fetching Google Sheets data:', error);
+          sendResponse({ error: error.message });
+        });
+      return true; // Indicates we will send a response asynchronously
+    } 
   });
 
-  function fetchGoogleSheetsData(token) {
-    // Implement your Google Sheets API requests here
-    // Return a promise that resolves with the data
+
+  function fetchGoogleSheetsData(spreadsheetId) {
+    console.log('Fetching Google Sheets data for spreadsheet ID:', spreadsheetId);
+    return new Promise((resolve, reject) => {
+      chrome.identity.getAuthToken({ interactive: true }, function(token) {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        
+        const range = 'Sheet1'; // You might want to make this configurable as well
+  
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.values) {
+            resolve(data.values);
+          } else {
+            reject(new Error('No data found in the response'));
+          }
+        })
+        .catch(error => reject(error));
+      });
+    });
   }
