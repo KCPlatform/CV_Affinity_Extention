@@ -15,12 +15,11 @@ window.KaporAIExt.googleSheets = {
       process.processAndHandleEntry(selectedDataRow)
         .then(companyInfo => {
           if (companyInfo) {
-            console.log('Company info:', companyInfo);
             process.buildKaporAiUrl(companyInfo.company, companyInfo.website, 'googlesheets');
           }
         })
         .catch(error => {
-          console.error('Error getting company info:', error);
+          console.log('Error getting company info:', error);
         });
     }
   },
@@ -37,7 +36,6 @@ window.KaporAIExt.googleSheets = {
 
     const now = Date.now();
     if (cache.sheetsData.data && (now - cache.sheetsData.timestamp < constants.SHEETS_CACHE_DURATION)) {
-      console.log('Using cached sheets data');
       return Promise.resolve(cache.sheetsData.data);
     }
 
@@ -52,7 +50,6 @@ window.KaporAIExt.googleSheets = {
         } else if (response.error) {
           reject(new Error(response.error));
         } else {
-          console.log('Resolved Google Sheets data:', response.data);
           cache.sheetsData = { data: response.data, timestamp: now };
           resolve(response.data);
         }
@@ -64,7 +61,6 @@ window.KaporAIExt.googleSheets = {
     const url = window.location.href;
     const spreadsheetIdMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     const spreadsheetId = spreadsheetIdMatch ? spreadsheetIdMatch[1] : null;
-    console.log('Spreadsheet ID:', spreadsheetId);
 
     return { spreadsheetId };
   },
@@ -80,7 +76,6 @@ window.KaporAIExt.googleSheets = {
 
       const sheetTabsContainer = document.querySelector('.docs-sheet-container');
       if (!sheetTabsContainer) {
-        console.error('Sheet tabs container not found');
         setTimeout(() => observeActiveSheetChange(callback), 1000);
         return;
       }
@@ -109,7 +104,6 @@ window.KaporAIExt.googleSheets = {
     };
 
     observeActiveSheetChange((activeSheetName) => {
-      console.log('Active sheet changed to:', activeSheetName);
       window.KaporAIExt.cache.clearCache('all');
       window.KaporAIExt.process.processAndAppendCompanyLink('googlesheets');
     });

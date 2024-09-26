@@ -2,56 +2,67 @@
 window.KaporAIExt = window.KaporAIExt || {};
 
 window.KaporAIExt.ui = {
-  loadHtmlTemplate: function() {
-    var self = this;
-    fetch(chrome.runtime.getURL('templates/panel.html'))
-      .then(function(response) { return response.text(); })
-      .then(function(data) {
-        let container = document.getElementById('kci');
-        if (!container) {
-          container = document.createElement("div");
-          container.classList.add("kci");
-          container.id = "kci";
-          document.body.appendChild(container);
-        }
-        container.innerHTML = data;
-
-        self.kciRunAfterPanelLoad();
-        self.loadProxyIntoIframe();
-        // No need to call runMain() here if it's already called elsewhere
-      })
-      .catch(function(error) {
-        console.error("There was an error:", error);
-      });
-  },
+    loadHtmlTemplate: function() {
+        var self = this;
+        fetch(chrome.runtime.getURL('templates/panel.html'))
+          .then(function(response) { return response.text(); })
+          .then(function(data) {
+            let container = document.getElementById('kci');
+            if (!container) {
+              try {
+                container = document.createElement("div");
+                container.classList.add("kci");
+                container.id = "kci";
+                if (document.body) {
+                  document.body.appendChild(container);
+                } else {
+                  console.log("Document body not found");
+                  return;
+                }
+              } catch (error) {
+                console.log("Error creating container:", error);
+                return;
+              }
+            }
+            
+            try {
+              container.innerHTML = data;
+              self.kciRunAfterPanelLoad();
+              self.loadProxyIntoIframe();
+            } catch (error) {
+              console.log("Error setting container innerHTML or running after-load functions:", error);
+            }
+          })
+          .catch(function(error) {
+            console.log("There was an error loading the HTML template:", error);
+          });
+    },
 
   loadProxyIntoIframe: function(service = 'chrome') {
     const constants = window.KaporAIExt.constants;
+    const CONFIG = window.KaporAIExt.CONFIG;
 
     const iframe = document.getElementById('kci__iframe');
     if (iframe) {
       const proxyUrl = chrome.runtime.getURL('templates/proxy.html');
-      console.log('Loading proxy URL into iframe:', proxyUrl);
 
       iframe.src = proxyUrl;
       iframe.style.width = '100%';
       iframe.style.height = '100%';
 
       iframe.onload = function() {
-        console.log('Proxy iframe loaded successfully');
         constants.iframeWasLoaded = true;
         iframe.contentWindow.postMessage({
           type: 'loadUrl',
-          config: { KAPOR_AI_BASE_URL: CONFIG.KAPOR_AI_BASE_URL },
           url: `${CONFIG.KAPOR_AI_BASE_URL}?hide_header=true&source=${service}`
         }, '*');
       };
 
       iframe.onerror = function() {
-        console.error('Proxy iframe failed to load');
+        console.log('Proxy iframe failed to load');
       };
     } else {
-      console.error('kci__iframe not found');
+      console.log('kci__iframe not found');
     }
   },
 
@@ -90,7 +101,7 @@ window.KaporAIExt.ui = {
     if (chatElement) {
       chatElement.style.display = (chatElement.style.display === 'none') ? 'block' : 'none';
     } else {
-      console.error('kci__chat element not found');
+      console.log('kci__chat element not found');
     }
   },
 
@@ -98,7 +109,7 @@ window.KaporAIExt.ui = {
     var self = this;
     const targetDiv = document.getElementById("kci__menu--float");
     if (!targetDiv) {
-      console.error("Element with ID 'kci__menu--float' not found");
+      console.log("Element with ID 'kci__menu--float' not found");
       return;
     }
 
@@ -137,7 +148,7 @@ window.KaporAIExt.ui = {
         self.toggleFullScreen();
       });
     } else {
-      console.error("Element with ID 'kci__btn--close' not found");
+      console.log("Element with ID 'kci__btn--close' not found");
     }
   },
 
@@ -152,7 +163,7 @@ window.KaporAIExt.ui = {
       window.KaporAIExt.utils.adjustKciViewPosition();
       this.updateIframeIfVisible();
     } else {
-      console.error('kci__view element not found');
+      console.log('kci__view element not found');
     }
   },
 
@@ -165,7 +176,7 @@ window.KaporAIExt.ui = {
         menuFloat.style.display = 'block';
       }
     } else {
-      console.error('kci__view element not found');
+      console.log('kci__view element not found');
     }
   },
 
@@ -193,13 +204,12 @@ window.KaporAIExt.ui = {
         fullScreenButton.textContent = 'Full Screen';
       }
     } else {
-      console.error('kci__view or kci__btn--full-screen element not found');
+      console.log('kci__view or kci__btn--full-screen element not found');
     }
   },
 
   updateIframeIfVisible: function(url = null) {
     const constants = window.KaporAIExt.constants;
-    const CONFIG = window.KaporAIExt.CONFIG;
 
     const kciView = document.getElementById('kci__view');
     const iframe = document.getElementById('kci__iframe');

@@ -11,7 +11,7 @@ function isGoogleSpreadsheet(url) {
           sendResponse({ data: data });
         })
         .catch(error => {
-          console.error('Error fetching Google Sheets data:', error);
+          console.log('Error fetching Google Sheets data:', error);
           sendResponse({ error: error.message });
         });
       return true; // Indicates we will send a response asynchronously

@@ -9,7 +9,6 @@ window.KaporAIExt.process = {
     const ui = window.KaporAIExt.ui;
 
     if (service === 'googlesheets') {
-      console.log('Getting Google Sheets company info');
 
       let nameBox = document.querySelector('input#t-name-box');
       if (nameBox) {
@@ -21,24 +20,36 @@ window.KaporAIExt.process = {
           this.processAndHandleEntry(selectedDataRow)
             .then(companyInfo => {
               if (companyInfo) {
-                console.log('Company info:', companyInfo);
                 this.buildKaporAiUrl(companyInfo.company, companyInfo.website, 'googlesheets');
               } else {
                 console.log('No company info available');
               }
             })
             .catch(error => {
-              console.error('Error getting company info:', error);
+              console.log('Error getting company info:', error);
             });
         }
       }
     } else if (service === 'affinity') {
-      console.log('Getting Affinity company info');
-      const companyInfo = affinity.getAffinityCompanyInfo();
+      
+        const processCompanyInfo = (info) => {
+          if (info) {
+            this.buildKaporAiUrl(info.companyName, info.website, 'affinity');
+          }
+        };
+  
+        const retryGetCompanyInfo = (attemptCount = 0) => {
+          let companyInfo = affinity.getAffinityCompanyInfo();
+          
+          if (companyInfo) {
+            processCompanyInfo(companyInfo);
+          } else if (attemptCount < 4) { 
+            setTimeout(() => retryGetCompanyInfo(attemptCount + 1), 300);
+          } 
+        };
+  
+        retryGetCompanyInfo();
 
-      if (companyInfo) {
-        this.buildKaporAiUrl(companyInfo.companyName, companyInfo.website, 'affinity');
-      }
     }
   },
 
@@ -59,11 +70,10 @@ window.KaporAIExt.process = {
             }
           })
           .catch(error => {
-            console.error('Error processing selected row:', error);
+            console.log('Error processing selected row:', error);
             reject(error);
           });
       } else {
-        console.log('URL has changed, resetting process');
         cache.clearCache('all');
         resolve(null);
       }
@@ -75,17 +85,13 @@ window.KaporAIExt.process = {
 
     return new Promise((resolve, reject) => {
       if (selectedDataRow == null || isNaN(selectedDataRow)) {
-        console.log('No row selected');
         resolve(null);
         return;
       }
 
-      console.log('Selected data row:', selectedDataRow);
-
       cache.getCachedOrFetchedData()
         .then(sheetsData => {
           if (!sheetsData || sheetsData.length <= selectedDataRow) {
-            console.log('Selected row is out of range, fetching updated data');
             cache.clearCache('all');
             return cache.getCachedOrFetchedData();
           }
@@ -93,7 +99,6 @@ window.KaporAIExt.process = {
         })
         .then(sheetsData => {
           if (!sheetsData || sheetsData.length <= selectedDataRow) {
-            console.log('Selected row is still out of range after update');
             resolve(null);
           } else {
             resolve(this.extractEntryFromRow(sheetsData, selectedDataRow));
@@ -152,7 +157,6 @@ window.KaporAIExt.process = {
       return null;
     }
 
-    console.log('Extracted entry:', entry);
     return entry;
   },
 
@@ -162,11 +166,8 @@ window.KaporAIExt.process = {
     const CONFIG = window.KaporAIExt.CONFIG;
 
     if (company && website) {
-      console.log('Company name found:', company);
-      console.log('Website found:', website);
 
       const kaporAiUrl = `${CONFIG.KAPOR_AI_BASE_URL}/company-report?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(company)}&source=${service}&hide_header=true`;
-      console.log('Kapor AI URL:', kaporAiUrl);
       constants.lastKaporAiUrl = kaporAiUrl;
 
       if (service === 'affinity') {

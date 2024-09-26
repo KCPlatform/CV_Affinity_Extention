@@ -10,13 +10,18 @@ window.KaporAIExt.main = {
     const ui = window.KaporAIExt.ui;
 
     let service = utils.isRelevantService();
+
     if (service) {
       process.processAndAppendCompanyLink(service);
+
+      if (service === 'googlesheets') {
+        googleSheets.initializeSheetObserver();
+      }
+      
     }
 
     if (!constants.isDataLoaded) {
       constants.isDataLoaded = true;
-      googleSheets.initializeSheetObserver();
     }
 
     // Load the HTML template and set up UI

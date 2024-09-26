@@ -19,10 +19,18 @@ window.KaporAIExt.affinity = {
     }
 
     if (nameElement && websiteElement) {
-      return {
-        companyName: nameElement.textContent.trim(),
-        website: websiteElement.textContent.trim(),
-      };
+
+        const companyName = nameElement.textContent ? nameElement.textContent.trim() : null;
+        const website = websiteElement.textContent ? websiteElement.textContent.trim() : null;
+  
+        if (companyName && website) {
+            
+            return {
+              companyName: companyName,
+              website: website,
+            };
+
+        }
     }
     return null;
   },

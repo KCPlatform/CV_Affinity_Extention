@@ -22,10 +22,10 @@
                     console.log('proxy.html exists and is accessible');
                     iframe.src = proxyUrl;
                 } else {
-                    console.error('proxy.html is not accessible:', response.status, response.statusText);
+                    console.log('proxy.html is not accessible:', response.status, response.statusText);
                 }
             })
-            .catch(error => console.error('Error checking proxy.html:', error));
+            .catch(error => console.log('Error checking proxy.html:', error));
 
         // Add an event listener to check if the iframe loads
         iframe.addEventListener('load', function() {
@@ -33,7 +33,7 @@
         });
 
         iframe.addEventListener('error', function() {
-            console.error('Iframe failed to load');
+            console.log('Iframe failed to load');
         });
     });
 </script>
