@@ -1,5 +1,3 @@
-let CONFIG = {};
-
 function loadKaporAI(url) {
     const iframe = document.getElementById('kapor-iframe');
     if (iframe) {

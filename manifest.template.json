@@ -33,7 +33,19 @@
         "https://*.affinity.co/*",
         "https://docs.google.com/spreadsheets/*"
       ],
-      "js": ["content.js", "config.js"],
+      "js": [
+        "constants.js",
+        "utils.js",
+        "cache.js",
+        "events.js",
+        "googleSheets.js",
+        "affinity.js",
+        "process.js",
+        "ui.js",
+        "main.js",
+        "content.js",
+        "config.js"
+      ],
       "css": ["style.css"]
     }
   ],
