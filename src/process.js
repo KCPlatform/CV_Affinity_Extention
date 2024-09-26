@@ -115,7 +115,7 @@ window.KaporAIExt.process = {
     const relevantColumns = {
       company: headers.findIndex(header => {
         const lowerHeader = header.toLowerCase().trim();
-        return lowerHeader.includes('company') || lowerHeader.includes('organization');
+        return lowerHeader.includes('company name') || lowerHeader.includes('organization') || lowerHeader === 'company';
       }),
       website: headers.findIndex(header => {
         const lowerHeader = header.toLowerCase().trim();
