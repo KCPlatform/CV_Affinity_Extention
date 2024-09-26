@@ -219,13 +219,11 @@ window.KaporAIExt.ui = {
     }
 
     if (url) {
-      console.log('Updating iframe with new URL:', url);
       iframe.contentWindow.postMessage({
         type: 'loadUrl',
         url: url
       }, '*');
     } else if (constants.lastKaporAiUrl) {
-      console.log('Updating iframe with last URL:', constants.lastKaporAiUrl);
       iframe.contentWindow.postMessage({
         type: 'loadUrl',
         url: constants.lastKaporAiUrl
