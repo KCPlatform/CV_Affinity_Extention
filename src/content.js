@@ -2,6 +2,9 @@ let lastProcessedData = null;
 let lastKaporAiUrl = null;
 let iframeWasLoaded = false;
 let isDataLoaded = false;
+let globalSheetName = 'Sheet1';
+let sheetObserver = null;
+
 // Global cache object
 let cache = {
     sheetsData: {
@@ -14,9 +17,8 @@ let cache = {
     }
   };
   
-  // Cache duration in milliseconds
-  const SHEETS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for sheet data
-  const SELECTION_CACHE_DURATION = 5 * 1000; // 5 seconds for selection data
+const SHEETS_CACHE_DURATION = 1 * 60 * 1000; // 1 minute for sheet data
+const SELECTION_CACHE_DURATION = 5 * 1000; // 5 seconds for selection data
   
 // Function to check if the URL has changed
 function hasUrlChanged() {
@@ -26,7 +28,7 @@ function hasUrlChanged() {
       return true;
     }
     return false;
-  }
+}
 hasUrlChanged.lastUrl = '';
 
 // Function to handle URL changes
@@ -59,25 +61,8 @@ function runMain() {
 if ( !isDataLoaded ) {
     runMain();
     isDataLoaded = true;
+    initializeSheetObserver();
 }
-// adjustKciViewPosition(); 
-
-// Set up a MutationObserver to watch for changes
-// const observer = new MutationObserver((mutations) => {
-//     for (let mutation of mutations) {
-//         if (mutation.type === 'childList' || mutation.type === 'subtree') {
-//             runMain();
-//             break;
-//         }
-//     }
-// });
-// observer.observe(document.body, { childList: true, subtree: true });
-
-// Set up a MutationObserver to watch for URL changes
-// const observerUrlChange = new MutationObserver(handleUrlChange);
-// observerUrlChange.observe(document.querySelector('title'), { subtree: true, characterData: true, childList: true });
-
-// setInterval(handleUrlChange, 5000);
 
 // Function to handle cell clicks
 function handleCellClick(event) {
@@ -117,6 +102,9 @@ new MutationObserver(() => {
         lastUrl = url;
         runMain();
         adjustKciViewPosition(); 
+        if (url.includes('docs.google.com/spreadsheets')) {
+            initializeSheetObserver();
+        }
     }
 }).observe(document, {subtree: true, childList: true});
 
@@ -317,29 +305,26 @@ function adjustKciViewPosition() {
 }
 
 function processAndHandleEntry(selectedDataRow) {
+    
     return new Promise((resolve, reject) => {
         if (!hasUrlChanged()) {
-            console.log('URL has not changed');
             processSelectedRow(selectedDataRow)
                 .then(entry => {
                     if (entry) {
-                        console.log('Processing entry:', entry);
-                        // Add your logic here to handle the entry
-                        resolve(entry); // Resolve the promise with the entry
+                        resolve(entry);
                     } else {
                         console.log('No valid entry found');
-                        resolve(null); // Resolve with null if no valid entry
+                        resolve(null); 
                     }
                 })
                 .catch(error => {
                     console.error('Error processing selected row:', error);
-                    reject(error); // Reject the promise if there's an error
+                    reject(error); 
                 });
         } else {
             console.log('URL has changed, resetting process');
             clearCache('all');
-            // Additional logic for URL change if needed
-            resolve(null); // Resolve with null if URL has changed
+            resolve(null); 
         }
     });
 }
@@ -358,7 +343,7 @@ function processSelectedRow(selectedDataRow) {
             .then(sheetsData => {
                 if (!sheetsData || sheetsData.length <= selectedDataRow) {
                     console.log('Selected row is out of range, fetching updated data');
-                    clearCache('sheets');
+                    clearCache('all');
                     return getCachedOrFetchedData();
                 }
                 return sheetsData;
@@ -465,7 +450,7 @@ function processAndAppendCompanyLink(service) {
         }
 
         // Don't run on initial load wait for click
-        if ( isDataLoaded ) {
+        if ( isDataLoaded && selectedDataRow != 0 ) {
             processAndHandleEntry(selectedDataRow)
             .then(companyInfo => {
                 if (companyInfo) {
@@ -582,7 +567,7 @@ function getAffinityCompanyInfo() {
 function createKaporAiUrl(company, website, service = 'chrome') {
 
     if ( company && website ) {
-        return `${CONFIG.KAPOR_AI_BASE_URL}/company-report/?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(company)}&source=${service}&hide_header=true`;
+        return `${CONFIG.KAPOR_AI_BASE_URL}/company-report?company_website=${encodeURIComponent(website)}&company_name=${encodeURIComponent(company)}&source=${service}&hide_header=true`;
     } else {
         return `${CONFIG.KAPOR_AI_BASE_URL}?&source=${service}&hide_header=true`;
     }
@@ -682,33 +667,67 @@ function setActiveTab(activeButton, inactiveButtons) {
     inactiveButtons.forEach(button => button.removeAttribute('data-state'));
 }
 
+function getActiveSheetName() {
+    const activeTab = document.querySelector('.docs-sheet-active-tab .docs-sheet-tab-name');
+    return activeTab ? activeTab.textContent : null;
+}
+
+function observeActiveSheetChange(callback) {
+    if (sheetObserver) {
+        sheetObserver.disconnect();
+    }
+
+    const sheetTabsContainer = document.querySelector('.docs-sheet-container');
+    if (!sheetTabsContainer) {
+        console.error('Sheet tabs container not found');
+        setTimeout(() => observeActiveSheetChange(callback), 1000);
+        return;
+    }
+
+    sheetObserver = new MutationObserver(() => {
+        const activeSheetName = getActiveSheetName();
+        if (activeSheetName && activeSheetName !== globalSheetName) {
+            globalSheetName = activeSheetName;
+            callback(activeSheetName);
+        }
+    });
+
+    sheetObserver.observe(sheetTabsContainer, { 
+        childList: true, 
+        subtree: true, 
+        attributes: true, 
+        attributeFilter: ['class'] 
+    });
+
+    // Initial check
+    const initialSheetName = getActiveSheetName();
+    if (initialSheetName) {
+        globalSheetName = initialSheetName;
+        callback(initialSheetName);
+    }
+}
+
+// Function to initialize the observer
+function initializeSheetObserver() {
+    observeActiveSheetChange((activeSheetName) => {
+        console.log('Active sheet changed to:', activeSheetName);
+        clearCache('all');
+        processAndAppendCompanyLink('googlesheets');
+    });
+}
+
 function getSpreadsheetInfoFromUrl() {
     const url = window.location.href;
-    const spreadsheetIdMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-    const sheetNameMatch = url.match(/[#&]gid=\d+(&range=([^&]+))?/);
-    
+    const spreadsheetIdMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);    
     const spreadsheetId = spreadsheetIdMatch ? spreadsheetIdMatch[1] : null;
-    let sheetName = 'Sheet1'; // Default sheet name
-    
-    if (sheetNameMatch && sheetNameMatch[2]) {
-      // If a specific range is selected in the URL, use the sheet name from that
-      sheetName = decodeURIComponent(sheetNameMatch[2].split('!')[0]);
-    } else {
-      // Try to get the sheet name from the page title
-    //   const titleMatch = document.title.match(/^(.+) - Google Sheets/);
-    //   if (titleMatch) {
-    //     sheetName = titleMatch[1];
-    //   }
-    }
     console.log('Spreadsheet ID:', spreadsheetId);
-    console.log('Sheet Name:', sheetName);
     
-    return { spreadsheetId, sheetName };
+    return { spreadsheetId };
   }
 
 
 function getGoogleSheetsData() {
-  const { spreadsheetId, sheetName } = getSpreadsheetInfoFromUrl();
+  const { spreadsheetId } = getSpreadsheetInfoFromUrl();
   if (!spreadsheetId) {
     return Promise.reject(new Error('No spreadsheet ID found in URL'));
   }
@@ -723,7 +742,7 @@ function getGoogleSheetsData() {
     chrome.runtime.sendMessage({ 
       action: "getGoogleSheetsData",
       spreadsheetId: spreadsheetId,
-      sheetName: sheetName
+      sheetName: globalSheetName
     }, response => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
@@ -750,12 +769,6 @@ function clearCache(type = 'all') {
 }
 
 
-// Example of how to use clearCache (e.g., attach to a refresh button)
-// document.getElementById('refreshButton').addEventListener('click', () => {
-//   clearCache('all');
-//   // Then re-fetch data...
-// });
-
 function updateIframeWithUrl(url) {
     const iframe = document.getElementById('kci__iframe');
     if (iframe) {
@@ -768,38 +781,3 @@ function updateIframeWithUrl(url) {
 function isGoogleSpreadsheet(url) {
   return url.startsWith('https://docs.google.com/spreadsheets/');
 }
-
-// function sendDataToSidePanel(data) {
-//   if (isGoogleSpreadsheet(window.location.href)) {
-//     if (chrome.runtime && chrome.runtime.id) {
-//         chrome.runtime.sendMessage({action: "updateSidePanel", data: data}, function(response) {
-//             if (chrome.runtime.lastError) {
-//                 console.log(chrome.runtime.lastError.message);
-//             } else {
-//                 // Handle response
-//             }
-//         });
-//     } else {
-//         console.log("Extension context invalid");
-//     }
-//   }
-// }
-
-// Call this function when you have new data to send to the side panel
-// sendDataToSidePanel({ companyName: "Example Corp", website: "example.com" });
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === "getKaporAiUrl") {
-        console.log("Received message to get Kapor AI URL");
-        const url = createKaporAiUrl(request.data.companyName, request.data.website);
-        console.log("Kapor AI URL:", url);
-        sendResponse({url: url});
-    }
-    return true;  // Indicates that the response is sent asynchronously
-});
-
-
-window.kaporAiExtension = {
-    createKaporAiUrl: createKaporAiUrl,
-    getGoogleSheetsData: getGoogleSheetsData
-};

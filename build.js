@@ -12,6 +12,15 @@ const isProduction = process.argv.includes('--production');
 // Ensure build directory exists
 if (!fs.existsSync(buildDir)) {
   fs.mkdirSync(buildDir);
+} else {
+  fs.readdirSync(buildDir).forEach(file => {
+    const filePath = path.join(buildDir, file);
+    if (fs.lstatSync(filePath).isDirectory()) {
+      fs.rmSync(filePath, { recursive: true, force: true });
+    } else {
+      fs.unlinkSync(filePath);
+    }
+  });
 }
 
 function copyToBuild(source, destination) {
