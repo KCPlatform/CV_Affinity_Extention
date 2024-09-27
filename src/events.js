@@ -4,6 +4,7 @@ window.KaporAIExt = window.KaporAIExt || {};
 window.KaporAIExt.events = {
   initializeEventListeners: function() {
     const googleSheets = window.KaporAIExt.googleSheets;
+    const airtable = window.KaporAIExt.airtable;
     const main = window.KaporAIExt.main;
     const utils = window.KaporAIExt.utils;
 

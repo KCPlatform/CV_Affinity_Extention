@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Beta Kapor.ai Sidekick",
+  "name": "CV Sidekick",
   "version": "1.1.0",
-  "description": "Get Kapor.ai reports displayed directly on your Affinity or in Google Sheets!",
+  "description": "View Kapor.ai CV reports displayed directly in your Affinity, Google Sheets, and Airtable!",
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",
@@ -20,7 +20,6 @@
   "oauth2": {
     "client_id": "__CLIENT_ID__",
     "scopes": [
-      "https://www.googleapis.com/auth/spreadsheets.readonly",
       "https://www.googleapis.com/auth/spreadsheets.currentonly"
     ]
   },
@@ -39,10 +38,10 @@
         "config.js",
         "utils.js",
         "cache.js",
-        "events.js",
         "googleSheets.js",
         "affinity.js",
         "airtable.js",
+        "events.js",
         "process.js",
         "ui.js",
         "main.js",

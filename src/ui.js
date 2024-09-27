@@ -2,8 +2,23 @@
 window.KaporAIExt = window.KaporAIExt || {};
 
 window.KaporAIExt.ui = {
+    isExtensionContextValid: function() {
+        try {
+            chrome.runtime.getURL("");
+            return true;
+        } catch (e) {
+            return false;
+        }
+    },
     loadHtmlTemplate: function() {
         var self = this;
+        if (!this.isExtensionContextValid()) {
+            console.log("Extension context is invalid. Attempting to reload...");
+            if (chrome.runtime.reload) {
+                chrome.runtime.reload();
+            }
+            return;
+        }
         fetch(chrome.runtime.getURL('templates/panel.html'))
           .then(function(response) { return response.text(); })
           .then(function(data) {
@@ -39,6 +54,12 @@ window.KaporAIExt.ui = {
     },
 
   loadProxyIntoIframe: function(service = 'chrome') {
+
+    if (!this.isExtensionContextValid()) {
+        console.log("Extension context is invalid. Skipping loadProxyIntoIframe.");
+        return;
+    }
+    
     const constants = window.KaporAIExt.constants;
     const CONFIG = window.KaporAIExt.CONFIG;
 
