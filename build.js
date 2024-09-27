@@ -4,7 +4,7 @@ const archiver = require('archiver');
 
 const sourceDir = './src';
 const buildDir = './build';
-
+const releasesDir = './releases';
 
 // Check if --production flag is used
 const isProduction = process.argv.includes('--production');
@@ -21,6 +21,10 @@ if (!fs.existsSync(buildDir)) {
       fs.unlinkSync(filePath);
     }
   });
+}
+
+if (!fs.existsSync(releasesDir)) {
+  fs.mkdirSync(releasesDir);
 }
 
 function copyToBuild(source, destination) {
@@ -92,8 +96,14 @@ if (isProduction) {
   
   if (isProduction) {
     console.log('Creating production zip file...');
+
+    const manifest = JSON.parse(manifestContent);
+
+    const extensionName = manifest.name.replace(/\s+/g, '-').toLowerCase();
+    const extensionVersion = manifest.version.replace(/\./g, '-');
     
-    const output = fs.createWriteStream('./extension.zip');
+    const output = fs.createWriteStream(`${releasesDir}/${extensionName}-${extensionVersion}.zip`);
+
     const archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
     });
