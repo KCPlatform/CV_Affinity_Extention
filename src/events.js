@@ -21,6 +21,9 @@ window.KaporAIExt.events = {
         if (url.includes('docs.google.com/spreadsheets')) {
           googleSheets.initializeSheetObserver();
         }
+        if (url.includes('airtable.com')) {
+          airtable.initializeAirtableObserver();
+        }
       }
     }).observe(document, { subtree: true, childList: true });
   },

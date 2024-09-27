@@ -31,20 +31,22 @@
     {
       "matches": [
         "https://*.affinity.co/*",
-        "https://docs.google.com/spreadsheets/*"
+        "https://docs.google.com/spreadsheets/*",
+        "https://airtable.com/*"
       ],
       "js": [
         "constants.js",
+        "config.js",
         "utils.js",
         "cache.js",
         "events.js",
         "googleSheets.js",
         "affinity.js",
+        "airtable.js",
         "process.js",
         "ui.js",
         "main.js",
-        "content.js",
-        "config.js"
+        "content.js"
       ],
       "css": ["style.css"]
     }
@@ -54,7 +56,8 @@
       "resources": ["content.js", "templates/proxy.html", "templates/panel.html", "icon-128.png", "templates/proxy.js"],
       "matches": [
         "https://*.affinity.co/*",
-        "https://docs.google.com/*"
+        "https://docs.google.com/*",
+        "https://airtable.com/*"
       ]
     }
   ]

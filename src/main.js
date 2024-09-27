@@ -6,18 +6,24 @@ window.KaporAIExt.main = {
     const utils = window.KaporAIExt.utils;
     const process = window.KaporAIExt.process;
     const googleSheets = window.KaporAIExt.googleSheets;
+    const airtable = window.KaporAIExt.airtable;
     const constants = window.KaporAIExt.constants;
     const ui = window.KaporAIExt.ui;
 
     let service = utils.isRelevantService();
 
     if (service) {
+      
       process.processAndAppendCompanyLink(service);
 
       if (service === 'googlesheets') {
         googleSheets.initializeSheetObserver();
       }
-      
+
+      if (service === 'airtable') {
+        airtable.initializeAirtableObserver();
+      }
+
     }
 
     if (!constants.isDataLoaded) {

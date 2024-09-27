@@ -5,8 +5,15 @@ window.KaporAIExt.process = {
   processAndAppendCompanyLink: function(service) {
     const affinity = window.KaporAIExt.affinity;
     const googleSheets = window.KaporAIExt.googleSheets;
+    const airtable = window.KaporAIExt.airtable;
     const constants = window.KaporAIExt.constants;
     const ui = window.KaporAIExt.ui;
+
+    const processCompanyInfo = (info, service) => {
+        if (info) {
+          this.buildKaporAiUrl(info.companyName, info.website, service);
+        }
+    };
 
     if (service === 'googlesheets') {
 
@@ -32,17 +39,12 @@ window.KaporAIExt.process = {
       }
     } else if (service === 'affinity') {
       
-        const processCompanyInfo = (info) => {
-          if (info) {
-            this.buildKaporAiUrl(info.companyName, info.website, 'affinity');
-          }
-        };
   
         const retryGetCompanyInfo = (attemptCount = 0) => {
           let companyInfo = affinity.getAffinityCompanyInfo();
           
           if (companyInfo) {
-            processCompanyInfo(companyInfo);
+            processCompanyInfo(companyInfo, 'affinity');
           } else if (attemptCount < 4) { 
             setTimeout(() => retryGetCompanyInfo(attemptCount + 1), 300);
           } 
@@ -50,6 +52,14 @@ window.KaporAIExt.process = {
   
         retryGetCompanyInfo();
 
+    } else if (service === 'airtable') {
+
+        let companyInfo = airtable.getAirtableCompanyInfo();
+
+        if (companyInfo) {
+          processCompanyInfo(companyInfo, service);
+        }
+      
     }
   },
 

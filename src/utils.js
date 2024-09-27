@@ -18,6 +18,8 @@ window.KaporAIExt.utils = (function() {
       return 'affinity';
     } else if (window.location.href.match(/https:\/\/docs\.google\.com\/spreadsheets/)) {
       return 'googlesheets';
+    } else if (window.location.href.match(/https:\/\/airtable\.com/)) {
+      return 'airtable';
     }
     return null;
   }
