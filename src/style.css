@@ -4,6 +4,22 @@
     font-family: Söhne,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica Neue,Arial,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji !important;
     font-weight: normal;
 }
+.kci.side_panel .kci__view  {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    background: unset !important;
+    box-shadow: unset !important;
+    backdrop-filter: unset !important;
+    -webkit-backdrop-filter:unset !important;
+    border: unset !important;
+    position: unset !important;
+    display: block !important;
+}
+
+.kci.side_panel .kci__menu--float, .kci.side_panel .kci__menu {
+    display: none !important;
+}
 
 .kci .kci__view {
     z-index: 999999;

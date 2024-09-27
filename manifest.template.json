@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "CV Sidekick",
+  "version": "1.1.0",
+  "description": "View Kapor.ai CV reports displayed directly in your Affinity, Google Sheets, and Airtable!",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://*.kapor.ai"
+  },
+  "permissions": [
+    "identity"
+  ],
+  "host_permissions": [
+    "https://www.googleapis.com/"
+  ],
+  "oauth2": {
+    "client_id": "__CLIENT_ID__",
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets.currentonly"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.affinity.co/*",
+        "https://docs.google.com/spreadsheets/*",
+        "https://airtable.com/*"
+      ],
+      "js": [
+        "constants.js",
+        "config.js",
+        "utils.js",
+        "cache.js",
+        "googleSheets.js",
+        "affinity.js",
+        "airtable.js",
+        "events.js",
+        "process.js",
+        "ui.js",
+        "main.js",
+        "content.js"
+      ],
+      "css": ["style.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content.js", "templates/proxy.html", "templates/panel.html", "icon-128.png", "templates/proxy.js"],
+      "matches": [
+        "https://*.affinity.co/*",
+        "https://docs.google.com/*",
+        "https://airtable.com/*"
+      ]
+    }
+  ]
+}
