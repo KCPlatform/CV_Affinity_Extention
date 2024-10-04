@@ -335,10 +335,18 @@ window.KaporAIExt.ui = {
     kaporAiTabContent.className = 'kapor-ai-tab';
 
     const iframe = document.createElement('iframe');
-    iframe.src = kaporAiUrl;
+    const proxyUrl = chrome.runtime.getURL('templates/proxy.html');
+    iframe.src = proxyUrl;
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
+
+    iframe.onload = function() {
+        iframe.contentWindow.postMessage({
+            type: 'loadUrl',
+            url: kaporAiUrl
+        }, '*');
+    };
 
     kaporAiTabContent.appendChild(iframe);
     profileContentTabs.appendChild(kaporAiTabContent);
