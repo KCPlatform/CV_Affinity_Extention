@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CV Sidekick",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "View Kapor.ai CV reports displayed directly in your Affinity, Google Sheets, and Airtable!",
   "icons": {
     "16": "icon-16.png",
@@ -30,7 +30,6 @@
     {
       "matches": [
         "https://*.affinity.co/*",
-        "https://docs.google.com/spreadsheets/*",
         "https://airtable.com/*"
       ],
       "js": [
