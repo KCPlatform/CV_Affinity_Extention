@@ -16,9 +16,9 @@ window.KaporAIExt.main = {
       
       process.processAndAppendCompanyLink(service);
 
-      // if (service === 'googlesheets') {
-      //   googleSheets.initializeSheetObserver();
-      // }
+      if (service === 'googlesheets') {
+        googleSheets.initializeSheetObserver();
+      }
 
       if (service === 'airtable') {
         airtable.initializeAirtableObserver();
