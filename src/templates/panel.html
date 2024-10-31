@@ -5,9 +5,18 @@
         <button class="kci__btn--close btn btn-primary" id="kci__btn--close" style="font-size: 12px; margin-right: 20px">Close</button>
     </div>
     <div class="kci__content">
-        <iframe id="kci__iframe" style="width: 100%; height: 100vh; border: none; overflow: hidden;"></iframe>
+        <iframe id="kci__iframe"></iframe>
     </div>
 </div>
+
+<style>
+    #kci__iframe {
+        height: calc(100vh - 50px) !important;
+        width: 100% !important;
+        border: none;
+        overflow: hidden;
+    }
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
