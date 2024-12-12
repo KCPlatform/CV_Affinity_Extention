@@ -359,9 +359,9 @@ window.KaporAIExt.ui = {
     });
   },
 
-  showPassModal: function() {
-    if (!document.getElementById('kapor-modal')) {
-      this.createPassModal();
+  showPassModal: function(companyInfo) {
+    if (!document.getElementById('kapor-modal')) {  
+      this.createPassModal(companyInfo?.companyName || '', companyInfo?.website || '');
     }
     document.getElementById('kapor-modal').style.display = 'block';
   },
@@ -373,7 +373,7 @@ window.KaporAIExt.ui = {
     }
   },
 
-  createPassModal: function() {
+  createPassModal: function(companyName = '', companyWebsite = '') {
     const modalHTML = `
       <div id="kapor-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
            background: rgba(0,0,0,0.5); z-index: 10000;">
@@ -381,6 +381,12 @@ window.KaporAIExt.ui = {
              background: white; padding: 20px; border-radius: 8px;">
           <button id="kapor-modal-close" style="position: absolute; right: 10px; top: 10px;">×</button>
           <h2>Send Pass Email</h2>
+          <div style="margin-bottom: 15px;">
+            <strong>Company:</strong> ${companyName}
+          </div>
+          <div style="margin-bottom: 15px;">
+            <strong>Website:</strong> ${companyWebsite}
+          </div>
           <iframe src="YOUR_IFRAME_URL" style="width: 100%; height: 400px; border: none;"></iframe>
         </div>
       </div>

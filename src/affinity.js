@@ -68,7 +68,8 @@ window.KaporAIExt.affinity = {
                 
                 if (currentCount > previousCounts[columnTitle]) {
                   console.log(`Card moved to ${columnTitle} column (count: ${currentCount})`);
-                  ui.showPassModal();
+                  const companyInfo = window.KaporAIExt.affinity.getAffinityCompanyInfo();
+                  ui.showPassModal(companyInfo);
                 }
                 
                 previousCounts[columnTitle] = currentCount;
@@ -103,7 +104,8 @@ window.KaporAIExt.affinity = {
         const statusText = suggestionElement.querySelector('.text-with-icon-text.truncated')?.textContent.trim();
         if (statusText === 'Lost' || statusText === 'Pass') {
           console.log('Status changed to Lost/Pass via dropdown');
-          ui.showPassModal();
+          const companyInfo = window.KaporAIExt.affinity.getAffinityCompanyInfo();
+          ui.showPassModal(companyInfo);
         }
       }
     });
@@ -117,7 +119,9 @@ window.KaporAIExt.affinity = {
             const text = element.textContent;
             if (text && text.includes('moved to status Lost')) {
               console.log('Status changed to Lost via bucket');
-              ui.showPassModal();
+              // Get company info before showing modal
+              const companyInfo = window.KaporAIExt.affinity.getAffinityCompanyInfo();
+              ui.showPassModal(companyInfo);
             }
           }
         };
