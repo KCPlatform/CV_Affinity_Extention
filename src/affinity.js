@@ -35,4 +35,20 @@ window.KaporAIExt.affinity = {
     return null;
   },
 
+  initializeAffinityObserver: function() {
+    const ui = window.KaporAIExt.ui;
+
+    // Watch for clicks on the chooser suggestions
+    document.addEventListener('click', (e) => {
+      const suggestionElement = e.target.closest('.chooser-suggestion');
+      if (suggestionElement) {
+        const statusText = suggestionElement.querySelector('.text-with-icon-text.truncated')?.textContent.trim();
+        if (statusText === 'Lost' || statusText === 'Pass') {
+          console.log('Status changed to Lost');
+          ui.showPassModal();
+        }
+      }
+    });
+  }
+
 };

@@ -7,6 +7,7 @@ window.KaporAIExt.main = {
     const process = window.KaporAIExt.process;
     const googleSheets = window.KaporAIExt.googleSheets;
     const airtable = window.KaporAIExt.airtable;
+    const affinity = window.KaporAIExt.affinity;
     const constants = window.KaporAIExt.constants;
     const ui = window.KaporAIExt.ui;
 
@@ -22,6 +23,10 @@ window.KaporAIExt.main = {
 
       if (service === 'airtable') {
         airtable.initializeAirtableObserver();
+      }
+
+      if (service === 'affinity') {
+        affinity.initializeAffinityObserver();
       }
 
     }
