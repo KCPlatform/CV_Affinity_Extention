@@ -83,22 +83,6 @@ window.KaporAIExt.affinity = {
         }
       });
 
-    //   document.addEventListener('dragend', (e) => {
-    //     const card = e.target.closest('.kb-card');
-    //     if (card) {
-    //       const targetColumn = card.closest('.kb-column');
-    //       if (targetColumn) {
-    //         const columnTitle = targetColumn.querySelector('.kb-column-header-title-liner')?.textContent.trim();
-    //         if ((columnTitle === 'Lost' || columnTitle === 'Pass') && draggedCompanyInfo) {
-    //           console.log(`Card dragged to ${columnTitle} column`);
-    //           ui.showPassModal(draggedCompanyInfo);
-    //         }
-    //       }
-    //       draggedCompanyInfo = null; // Reset after drag
-    //     }
-    //   });
-    // };
-
     document.addEventListener('dragend', (e) => {
       // Don't reset draggedCompanyInfo immediately
       // Let the MutationObserver use it first
@@ -161,20 +145,7 @@ window.KaporAIExt.affinity = {
       }, 1000);
     };
 
-    // Watch for clicks on the chooser suggestions
-    document.addEventListener('click', (e) => {
-      const suggestionElement = e.target.closest('.chooser-suggestion');
-      if (suggestionElement) {
-        const statusText = suggestionElement.querySelector('.text-with-icon-text.truncated')?.textContent.trim();
-        if (statusText === 'Lost' || statusText === 'Pass') {
-          console.log('Status changed to Lost/Pass via dropdown');
-          const companyInfo = window.KaporAIExt.affinity.getAffinityCompanyInfo();
-          ui.showPassModal(companyInfo);
-        }
-      }
-    });
-
-    // Watch for bucket drops
+    // Drag and drop bucket changes
     const bucketDropObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         // Look for newly added or modified subtitle elements
@@ -184,8 +155,10 @@ window.KaporAIExt.affinity = {
             if (text && text.includes('moved to status Lost')) {
               console.log('Status changed to Lost via bucket');
               // Get company info before showing modal
-              const companyInfo = window.KaporAIExt.affinity.getAffinityCompanyInfo();
-              ui.showPassModal(companyInfo);
+              if (draggedCompanyInfo) {
+                console.log('Bucket change with company info:', draggedCompanyInfo);
+                ui.showPassModal(draggedCompanyInfo);
+              } 
             }
           }
         };
@@ -215,6 +188,19 @@ window.KaporAIExt.affinity = {
       childList: true,
       subtree: true,
       characterData: true
+    });
+
+    // Dropdown selections
+    document.addEventListener('click', (e) => {
+      const suggestionElement = e.target.closest('.chooser-suggestion');
+      if (suggestionElement) {
+        const statusText = suggestionElement.querySelector('.text-with-icon-text.truncated')?.textContent.trim();
+        if (statusText === 'Lost' || statusText === 'Pass') {
+          console.log('Status changed to Lost/Pass via dropdown');
+          const companyInfo = window.KaporAIExt.affinity.getAffinityCompanyInfo();
+          ui.showPassModal(companyInfo);
+        }
+      }
     });
 
     // Initialize drag listeners
