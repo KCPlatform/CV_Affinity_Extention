@@ -6,11 +6,30 @@ window.KaporAIExt.affinity = {
     let nameElement, websiteElement;
 
     if (window.location.href.includes('affinity.co/lists')) {
-      // For lists page
-      const companyDiv = document.querySelector('div.affinity-css-bagv5u.ectaxxz4');
-      if (companyDiv) {
-        nameElement = companyDiv.querySelector('a.affinity-css-bagv5u.ectaxxz3 span');
-        websiteElement = companyDiv.querySelector('a[href^="http"]');
+      // Check for dragged card first
+      const draggedCard = document.querySelector('.-dragging');
+      console.log('draggedCard', draggedCard);
+      if (draggedCard) {
+        // Extract info from dragged card
+        nameElement = draggedCard.querySelector('span.company-name');
+        websiteElement = draggedCard.querySelector('.kb-card-subtitle');
+      } else {
+        // Check for targeted cell (status click) scenario
+        const targetedCell = document.querySelector('td.sheet-content-cell.focused.targeted');
+        if (targetedCell) {
+          const row = targetedCell.closest('tr');
+          if (row) {
+            nameElement = row.querySelector('a.company-name');
+            websiteElement = row.querySelector('a.domain');
+          }
+        } else {
+          // Original list view logic
+          const companyDiv = document.querySelector('div.affinity-css-bagv5u.ectaxxz4');
+          if (companyDiv) {
+            nameElement = companyDiv.querySelector('a.affinity-css-bagv5u.ectaxxz3 span');
+            websiteElement = companyDiv.querySelector('a[href^="http"]');
+          }
+        }
       }
     } else {
       // For company page
@@ -19,18 +38,15 @@ window.KaporAIExt.affinity = {
     }
 
     if (nameElement && websiteElement) {
-
-        const companyName = nameElement.textContent ? nameElement.textContent.trim() : null;
-        const website = websiteElement.textContent ? websiteElement.textContent.trim() : null;
-  
-        if (companyName && website) {
-            
-            return {
-              companyName: companyName,
-              website: website,
-            };
-
-        }
+      const companyName = nameElement.textContent ? nameElement.textContent.trim() : null;
+      const website = websiteElement.textContent ? websiteElement.textContent.trim() : null;
+      
+      if (companyName && website) {
+        return {
+          companyName: companyName,
+          website: website,
+        };
+      }
     }
     return null;
   },
@@ -44,6 +60,55 @@ window.KaporAIExt.affinity = {
     let isInitialized = false;
     let observer = null;
     let lastUrl = window.location.href;
+    let draggedCompanyInfo = null;
+    let processingDrag = false; 
+
+    // Add drag event listeners
+    const setupDragListeners = () => {
+      document.addEventListener('dragstart', (e) => {
+        const card = e.target.closest('.kb-card');
+        if (card) {
+          // Extract company info directly from the card
+          const nameElement = card.querySelector('.company-name span');
+          const websiteElement = card.querySelector('.kb-card-subtitle');
+          
+          if (nameElement && websiteElement) {
+            draggedCompanyInfo = {
+              companyName: nameElement.textContent.trim(),
+              website: websiteElement.textContent.trim()
+            };
+            processingDrag = true;
+            console.log('Drag started, captured company info:', draggedCompanyInfo);
+          }
+        }
+      });
+
+    //   document.addEventListener('dragend', (e) => {
+    //     const card = e.target.closest('.kb-card');
+    //     if (card) {
+    //       const targetColumn = card.closest('.kb-column');
+    //       if (targetColumn) {
+    //         const columnTitle = targetColumn.querySelector('.kb-column-header-title-liner')?.textContent.trim();
+    //         if ((columnTitle === 'Lost' || columnTitle === 'Pass') && draggedCompanyInfo) {
+    //           console.log(`Card dragged to ${columnTitle} column`);
+    //           ui.showPassModal(draggedCompanyInfo);
+    //         }
+    //       }
+    //       draggedCompanyInfo = null; // Reset after drag
+    //     }
+    //   });
+    // };
+
+    document.addEventListener('dragend', (e) => {
+      // Don't reset draggedCompanyInfo immediately
+      // Let the MutationObserver use it first
+      setTimeout(() => {
+        draggedCompanyInfo = null;
+        processingDrag = false;
+        console.log('Reset draggedCompanyInfo');
+      }, 100); // Small delay to ensure observer processes first
+    });
+  };
 
     const initializeObserver = () => {
       // Clean up existing observer if it exists
@@ -66,10 +131,9 @@ window.KaporAIExt.affinity = {
                 const column = titleElement.closest('.kb-column');
                 const currentCount = column.querySelectorAll('.kb-card').length;
                 
-                if (currentCount > previousCounts[columnTitle]) {
-                  console.log(`Card moved to ${columnTitle} column (count: ${currentCount})`);
-                  const companyInfo = window.KaporAIExt.affinity.getAffinityCompanyInfo();
-                  ui.showPassModal(companyInfo);
+                if (currentCount > previousCounts[columnTitle] && draggedCompanyInfo) {
+                  console.log('Processing column change with company info:', draggedCompanyInfo);
+                  ui.showPassModal(draggedCompanyInfo);
                 }
                 
                 previousCounts[columnTitle] = currentCount;
@@ -152,6 +216,9 @@ window.KaporAIExt.affinity = {
       subtree: true,
       characterData: true
     });
+
+    // Initialize drag listeners
+    setupDragListeners();
 
     // Initialize the observer for the first time
     initializeObserver();

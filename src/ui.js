@@ -359,42 +359,57 @@ window.KaporAIExt.ui = {
     });
   },
 
-  showPassModal: function(companyInfo) {
-    if (!document.getElementById('kapor-modal')) {  
-      this.createPassModal(companyInfo?.companyName || '', companyInfo?.website || '');
+  initializeModal: function() {
+    if (!document.getElementById('kapor-modal')) {
+      const modalHTML = `
+        <div id="kapor-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+             background: rgba(0,0,0,0.5); z-index: 10000;">
+          <div style="position: relative; width: 80%; max-width: 600px; margin: 100px auto; 
+               background: white; padding: 20px; border-radius: 8px;">
+            <button id="kapor-modal-close" style="position: absolute; right: 10px; top: 10px;">×</button>
+            <h2>Send Pass Email</h2>
+            <div id="kapor-company-name" style="margin-bottom: 15px;">
+              <strong>Company:</strong> <span class="company-value"></span>
+            </div>
+            <div id="kapor-company-website" style="margin-bottom: 15px;">
+              <strong>Website:</strong> <span class="website-value"></span>
+            </div>
+            <iframe src="YOUR_IFRAME_URL" style="width: 100%; height: 400px; border: none;"></iframe>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      
+      // Add close button event listener
+      document.getElementById('kapor-modal-close').addEventListener('click', () => {
+        this.closePassModal();
+      });
     }
-    document.getElementById('kapor-modal').style.display = 'block';
   },
 
-  hidePassModal: function() {
+  showPassModal: function(companyInfo) {
+    const modal = document.getElementById('kapor-modal');
+    if (!modal) {
+      this.initializeModal();
+    }
+    
+    const companyNameElement = document.querySelector('#kapor-company-name .company-value');
+    const companyWebsiteElement = document.querySelector('#kapor-company-website .website-value');
+    
+    if (companyNameElement && companyWebsiteElement && companyInfo) {
+      companyNameElement.textContent = companyInfo.companyName || '';
+      companyWebsiteElement.textContent = companyInfo.website || '';
+      
+      document.getElementById('kapor-modal').style.display = 'block';
+    }
+  },
+
+  closePassModal: function() {
     const modal = document.getElementById('kapor-modal');
     if (modal) {
       modal.style.display = 'none';
     }
-  },
-
-  createPassModal: function(companyName = '', companyWebsite = '') {
-    const modalHTML = `
-      <div id="kapor-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-           background: rgba(0,0,0,0.5); z-index: 10000;">
-        <div style="position: relative; width: 80%; max-width: 600px; margin: 100px auto; 
-             background: white; padding: 20px; border-radius: 8px;">
-          <button id="kapor-modal-close" style="position: absolute; right: 10px; top: 10px;">×</button>
-          <h2>Send Pass Email</h2>
-          <div style="margin-bottom: 15px;">
-            <strong>Company:</strong> ${companyName}
-          </div>
-          <div style="margin-bottom: 15px;">
-            <strong>Website:</strong> ${companyWebsite}
-          </div>
-          <iframe src="YOUR_IFRAME_URL" style="width: 100%; height: 400px; border: none;"></iframe>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    document.getElementById('kapor-modal-close').addEventListener('click', () => {
-      this.hidePassModal();
-    });
-  },
+  }
 };
+
+window.KaporAIExt.ui.initializeModal();
