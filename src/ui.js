@@ -367,14 +367,7 @@ window.KaporAIExt.ui = {
           <div style="position: relative; width: 80%; max-width: 600px; margin: 100px auto; 
                background: white; padding: 20px; border-radius: 8px;">
             <button id="kapor-modal-close" style="position: absolute; right: 10px; top: 10px;">×</button>
-            <h2>Send Pass Email</h2>
-            <div id="kapor-company-name" style="margin-bottom: 15px;">
-              <strong>Company:</strong> <span class="company-value"></span>
-            </div>
-            <div id="kapor-company-website" style="margin-bottom: 15px;">
-              <strong>Website:</strong> <span class="website-value"></span>
-            </div>
-            <iframe src="YOUR_IFRAME_URL" style="width: 100%; height: 400px; border: none;"></iframe>
+            <iframe id="kapor-modal-iframe" style="width: 100%; height: 400px; border: none;"></iframe>
           </div>
         </div>
       `;
@@ -395,10 +388,15 @@ window.KaporAIExt.ui = {
     
     const companyNameElement = document.querySelector('#kapor-company-name .company-value');
     const companyWebsiteElement = document.querySelector('#kapor-company-website .website-value');
+    const iframe = document.getElementById('kapor-modal-iframe');
     
-    if (companyNameElement && companyWebsiteElement && companyInfo) {
+    if (companyNameElement && companyWebsiteElement && iframe && companyInfo) {
       companyNameElement.textContent = companyInfo.companyName || '';
       companyWebsiteElement.textContent = companyInfo.website || '';
+      
+      // Update iframe src with the correct URL
+      const CONFIG = window.KaporAIExt.CONFIG;
+      iframe.src = `${CONFIG.KAPOR_AI_BASE_URL}/reply?company_name=${encodeURIComponent(companyInfo.companyName || '')}&company_website=${encodeURIComponent(companyInfo.website || '')}&hide_header=true&hide_footer=true&source=chrome`;
       
       document.getElementById('kapor-modal').style.display = 'block';
     }
