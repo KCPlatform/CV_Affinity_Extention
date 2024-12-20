@@ -377,6 +377,20 @@ window.KaporAIExt.ui = {
       document.getElementById('kapor-modal-close').addEventListener('click', () => {
         this.closePassModal();
       });
+
+      // Add message listener for clipboard operations
+      window.addEventListener('message', function(event) {
+        console.log('Received message:', event.data);
+        if (event.data.type === 'copy-to-clipboard') {
+          navigator.clipboard.writeText(event.data.data)
+            .then(() => {
+              console.log('Text successfully copied to clipboard');
+            })
+            .catch(err => {
+              console.error('Failed to copy text: ', err);
+            });
+        }
+      });
     }
   },
 
@@ -386,14 +400,9 @@ window.KaporAIExt.ui = {
       this.initializeModal();
     }
     
-    const companyNameElement = document.querySelector('#kapor-company-name .company-value');
-    const companyWebsiteElement = document.querySelector('#kapor-company-website .website-value');
     const iframe = document.getElementById('kapor-modal-iframe');
     
-    if (companyNameElement && companyWebsiteElement && iframe && companyInfo) {
-      companyNameElement.textContent = companyInfo.companyName || '';
-      companyWebsiteElement.textContent = companyInfo.website || '';
-      
+    if ( iframe && companyInfo) {
       // Update iframe src with the correct URL
       const CONFIG = window.KaporAIExt.CONFIG;
       iframe.src = `${CONFIG.KAPOR_AI_BASE_URL}/reply?company_name=${encodeURIComponent(companyInfo.companyName || '')}&company_website=${encodeURIComponent(companyInfo.website || '')}&hide_header=true&hide_footer=true&source=chrome`;
