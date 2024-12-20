@@ -367,7 +367,7 @@ window.KaporAIExt.ui = {
           <div style="position: relative; width: 80%; max-width: 600px; margin: 100px auto; 
                background: white; padding: 20px; border-radius: 8px;">
             <button id="kapor-modal-close" style="position: absolute; right: 10px; top: 10px;">×</button>
-            <iframe id="kapor-modal-iframe" style="width: 100%; height: 400px; border: none;"></iframe>
+            <iframe id="kapor-modal-iframe" style="width: 100%; height: 600px; border: none;"></iframe>
           </div>
         </div>
       `;
