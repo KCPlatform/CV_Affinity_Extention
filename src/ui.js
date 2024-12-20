@@ -400,15 +400,28 @@ window.KaporAIExt.ui = {
       this.initializeModal();
     }
     
-    const iframe = document.getElementById('kapor-modal-iframe');
-    
-    if ( iframe && companyInfo) {
-      // Update iframe src with the correct URL
-      const CONFIG = window.KaporAIExt.CONFIG;
-      iframe.src = `${CONFIG.KAPOR_AI_BASE_URL}/reply?company_name=${encodeURIComponent(companyInfo.companyName || '')}&company_website=${encodeURIComponent(companyInfo.website || '')}&hide_header=true&hide_footer=true&source=chrome`;
-      
-      document.getElementById('kapor-modal').style.display = 'block';
+    // Remove existing iframe
+    const oldIframe = document.getElementById('kapor-modal-iframe');
+    if (oldIframe) {
+      oldIframe.remove();
     }
+    
+    // Create and append new iframe
+    const modalContent = modal.querySelector('div');
+    const newIframe = document.createElement('iframe');
+    newIframe.id = 'kapor-modal-iframe';
+    newIframe.style.width = '100%';
+    newIframe.style.height = '600px';
+    newIframe.style.border = 'none';
+    
+    if (companyInfo) {
+      const CONFIG = window.KaporAIExt.CONFIG;
+      const url = `${CONFIG.KAPOR_AI_BASE_URL}/reply?company_name=${encodeURIComponent(companyInfo.companyName || '')}&company_website=${encodeURIComponent(companyInfo.website || '')}&hide_header=true&hide_footer=true&source=chrome`;
+      newIframe.src = url;
+    }
+    
+    modalContent.appendChild(newIframe);
+    modal.style.display = 'block';
   },
 
   closePassModal: function() {
